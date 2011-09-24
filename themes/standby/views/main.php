@@ -221,8 +221,9 @@
 				<!-- / filters -->
 
 				<?php								
-				// Map block
+				// Map and timeline blocks
 				echo $div_map;
+        echo $div_timeline;
 				?>
 			</div>
 		</div>

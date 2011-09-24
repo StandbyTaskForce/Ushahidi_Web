@@ -446,6 +446,7 @@ div.graph-holder {
     height:150px;
     overflow:hidden;
     width:573px;
+    display: none !important;
 }
 
 div.slider-holder {
@@ -454,6 +455,7 @@ div.slider-holder {
     margin-top:15px;
     width:554px;
     padding-left: 11px;
+    display: none !important;
 }
 
 div.slider-holder label{
