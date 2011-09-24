@@ -88,7 +88,7 @@
 										$theme['Screenshot']."\" width=240 height=150 border=0>";
 									}
 								?></div>
-								<strong><?php echo $theme['Title']." $i by ".$theme['Author']; ?></strong><BR />
+								<strong><?php echo $theme['Title']." by ".$theme['Author']; ?></strong><BR />
 								<?php echo $theme['Description'] ?><BR />
 								<strong><u><?php echo Kohana::lang('ui_main.version');?></u></strong>: <?php echo $theme['Version'] ?><BR />
 								<strong><u><?php echo Kohana::lang('ui_main.demo');?></u></strong>: <?php echo $theme['Demo'] ?><BR />
