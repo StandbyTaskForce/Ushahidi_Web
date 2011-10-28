@@ -75,7 +75,7 @@ body{
     font-family: Arial, Helvetica, sans-serif;
     color: #333333;
     font-size: 12px;
-    background: #585858 url(../images/page-bg.jpg) 50% 0 repeat-x;
+    background: #585858;
 }
 
 
@@ -88,7 +88,7 @@ div.rapidxwpr{
 /* header */
 div#header{
     position: relative;
-    height: 144px;
+    height: 80px;
     margin: 0px 0px 0px 0px;
 }
 
@@ -96,9 +96,9 @@ div#header{
 div#logo{
     border: 0;
     background: #E2E2E2;
-    padding: 35px 24px;
+    padding: 13px 24px;
     float: left;
-    margin: 14px 0 0 0;
+    margin: 0;
 }
 
 div#logo h1{
@@ -118,7 +118,7 @@ div#logo span{
 /* main body setup */
 div#middle{
     width: auto;
-    margin: 0px;
+    margin: 10px 0 0 0;
     clear: both;
     background: #FFF;
 }
@@ -156,6 +156,7 @@ div#right{
     width: 285px;
     padding: 0px;
     float: right;
+    clear: right;
 }
 
 /* right column (width: 50%) */
@@ -304,15 +305,26 @@ div.search-form input.searchbtn{
     padding: 1px 0 19px 0;
 }
 
+div#mainmenu div.submit-incident {
+  position: relative;
+  margin: 0;
+  float: right;
+}
+
+div#mainmenu div.submit-incident a {
+  padding: 8px 10px 8px 35px;
+  text-transform: uppercase;
+}
+
 /* submit incident */
-div.submit-incident{
+div.submit-incident {
     margin: 80px 0 0 0;
     position:absolute;
     top:0; right:0;
     width: 300px;
 }
 
-div.submit-incident a, div.submit-incident a:hover{
+div.submit-incident a, div.submit-incident a:hover {
     padding: 8px 10px 8px 35px;
     background-color: #368C00;
     background-image: url(../images/submit-incident.png);
@@ -329,9 +341,9 @@ div.submit-incident a, div.submit-incident a:hover{
 
 /* mainmenu */
 div#mainmenu{
-    background: #C2C2C2;
-    border: #FFF 2px solid;
-    padding: 7px 10px;
+    background: #585858;
+    border: none;
+    padding: 0;
 }
 
 div#mainmenu ul{
@@ -349,17 +361,18 @@ div#mainmenu li{
 div#mainmenu a{
     display: block;
     position: relative;
-    padding: 7px 12px;
+    padding: 8px 12px;
     color: #fff;
     overflow: hidden;
-    text-transform: uppercase;
+    text-transform: none;
     font-weight: bold;
     font-size: 120%;
 }
 
 div#mainmenu a:hover, div#mainmenu a.active{
     text-decoration: none;
-    background: #2E8AB8;
+    background: #FFF;
+    color: #000;
 }
 
 /* Filters */
@@ -464,9 +477,10 @@ div.slider-holder label{
 
 /* category filters */
 div.cat-filters{
-    font-size: 85%;
-    text-transform: uppercase;
+    font-size: 110%;
+    text-transform: none;
     margin: 0 0 15px 0;
+    float: right;
 }
 
 div.cat-filters strong{
@@ -505,7 +519,7 @@ ul.category-filters li a{
     display: block;
     padding: 8px 10px 8px 5px;
     font-size: 15px;
-    text-transform: uppercase;
+    text-transform: none;
     font-weight: bold;
     text-decoration: none;
     color: #3F3F3F;
@@ -632,7 +646,7 @@ div.footer-credits{
     float: right;
     font-size: 70%;
     font-weight: bold;
-    text-transform: uppercase;
+    text-transform: none;
     margin: 0 20px 0 0;
 }
 

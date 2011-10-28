@@ -7,7 +7,29 @@
 	<?php
 	// Action::header_scripts - Additional Inline Scripts from Plugins
 	Event::run('ushahidi_action.header_scripts');
-	?>
+  ?>
+
+  <script type="text/javascript">
+    // Hide the sidebar, make the map full width
+    function toggleSidebar(link, layer) {
+      if ($("#"+link).text() == "<?php echo Kohana::lang('ui_main.show'); ?>") {
+        $("#"+link).text("<?php echo Kohana::lang('ui_main.hide'); ?>");
+        $('#content .floatbox').css('overflow', 'hidden').css('margin-left', '0');
+        $('#map').width('100%');
+        $('#mapStatus').width('100%');
+        $('#right').show();
+      }
+      else {
+        $("#"+link).text("<?php echo Kohana::lang('ui_main.show'); ?>");
+        $('#content .floatbox').css('overflow', 'visible').css('margin-left', '7%');
+        $('#map').width('810px');
+        $('#mapStatus').width('810px');
+        $('#right').hide();
+      }
+    }
+  </script>
+
+  <script src="<?php echo url::base() ?>themes/standby/js/standby.js" type="text/javascript"></script>
 </head>
 
 <?php 
@@ -73,10 +95,6 @@
 			<?php } ?>
 			<!-- / logo -->
 			
-			<!-- submit incident -->
-			<?php echo $submit_btn; ?>
-			<!-- / submit incident -->
-			
 		</div>
 		<!-- / header -->
 
@@ -90,5 +108,6 @@
 						<?php nav::main_tabs($this_page); ?>
 					</ul>
 
+        <?php echo $submit_btn; ?>
 				</div>
 				<!-- / mainmenu -->
