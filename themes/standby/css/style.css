@@ -75,7 +75,7 @@ body{
     font-family: Arial, Helvetica, sans-serif;
     color: #333333;
     font-size: 12px;
-    background: #585858;
+    background: #d3d3d3 url(../images/bg.png) repeat-x;
 }
 
 
@@ -95,8 +95,8 @@ div#header{
 /* logo */
 div#logo{
     border: 0;
-    background: #E2E2E2;
-    padding: 13px 24px;
+    background: inherit;
+    padding: 13px 5px;
     float: left;
     margin: 0;
 }
@@ -120,7 +120,7 @@ div#middle{
     width: auto;
     margin: 10px 0 0 0;
     clear: both;
-    background: #FFF;
+    background: inherit;
 }
 
 div#middle .background{
@@ -171,6 +171,7 @@ div#main{
     width: auto;
     margin: 0px;
     padding: 15px 29px;
+    background: #FFF;
 }
 
 div#mainmiddle{
@@ -183,6 +184,7 @@ div#main .withoutright{
 
 div#content{
     width: auto;
+    background: #FFF;
 }
 
 div#main .withright div#content{
@@ -235,11 +237,11 @@ div#searchbox{
     position: absolute;
     top: 0px;
     right: 0px;
-    background: #BEBEBE;
-    border: #9F9F9F 2px solid;
+    background: inherit;
+    border: none;
     border-top: 0;
-    width:380px;
-    padding:0 0 10px 0;
+    width: 420px;
+    padding: 0 0 10px 0;
     
 }
 
@@ -247,13 +249,18 @@ div#loggedin_user_action{
     float:right;
     width:100%;
     text-align:right;
-    padding:5px 15px 0px 0px;
+    padding:5px 0 5px 0px;
+}
+
+div#searchbox-wrapper {
+  margin-top: 15px;
+  border-top: 1px solid #D4D4D4;
 }
 
 /* languages */
 div.language-box{
     padding: 0px;
-    margin: 10px 0 0 15px;
+    margin: 16px 0 0 0;
     float: left;
 }
 
@@ -268,8 +275,8 @@ div.language-box select{
 /* searchform */
 div.search-form{
     padding: 0px;
-    margin: 10px 15px 0 5px;
-    float: left;
+    margin: 12px 0 0 5px;
+    float: right;
 }
 
 div.search-form ul{
@@ -289,7 +296,7 @@ div.search-form input.text{
     padding: 2px 0px 2px 0px;
     border: #9E9E9E 1px solid;
     margin: 0;
-    background: #EEEEEE;
+    background: #FFF;
     width: 160px;
     font-size: 13px;
 }
@@ -297,12 +304,12 @@ div.search-form input.text{
 div.search-form input.searchbtn{
     border: #868686 1px solid;
     background: #EEEEEE url(../images/search-button.jpg) 5px 5px no-repeat;
-    width: 24px;
+    width: auto;
     height: 21px;
     margin: 0 0 0 -4px;
-    text-indent: -10000px;
+    text-indent: 0px;
     cursor: pointer;
-    padding: 1px 0 19px 0;
+    padding: 2px 5px 18px 20px;
 }
 
 div#mainmenu div.submit-incident {
@@ -311,9 +318,17 @@ div#mainmenu div.submit-incident {
   float: right;
 }
 
-div#mainmenu div.submit-incident a {
+div#mainmenu div.submit-incident a, div#mainmenu div.submit-incident a:hover {
   padding: 8px 10px 8px 35px;
   text-transform: uppercase;
+  color: #FFF;
+  background: #368C00;
+  background-image: url(../images/submit-incident.png);
+  background-position:10px 8px;
+  background-repeat:no-repeat;
+}
+div#mainmenu div.submit-incident a:hover {
+  text-decoration: underline;
 }
 
 /* submit incident */
@@ -338,10 +353,13 @@ div.submit-incident a, div.submit-incident a:hover {
     float: right;
 }
 
+div.submit-incident a:hover {
+  text-decoration: underline;
+}
 
 /* mainmenu */
 div#mainmenu{
-    background: #585858;
+    background: inherit;
     border: none;
     padding: 0;
 }
@@ -362,7 +380,7 @@ div#mainmenu a{
     display: block;
     position: relative;
     padding: 8px 12px;
-    color: #fff;
+    color: #000;
     overflow: hidden;
     text-transform: none;
     font-weight: bold;
@@ -380,6 +398,7 @@ div.filters{
     font-size: 110%;
     text-transform: none;
     margin: 5px 0 15px;
+    display: none; /*Will they be missed?*/
 }
 
 div.filters strong{
@@ -552,7 +571,7 @@ div.additional-content ol {
 /* content blocks */
 div.content-container{
     padding: 0 0 15px 15px;
-    background: #E2E2E2;
+    background: #B8B8B8;
 }
 ul.content-column{
     width: 100%;
@@ -1150,7 +1169,7 @@ form {
 }
 
 .text, .textarea, .select, .file {
-    color:#00789F;
+    color:#000;
     font-size:120%;
 }
 
@@ -2426,6 +2445,9 @@ a.filter-button:hover { text-decoration:none; background:#707070;  }
 
 #threesteps .submit-incident a{
     text-decoration: none;
+}
+#threesteps .submit-incident a:hover {
+    text-decoration: underline;
 }
 
 #threesteps .emergency-services {

@@ -73,13 +73,15 @@
 				</div><br/>
 				<!-- / user actions -->
 				
-				<!-- languages -->
-				<?php echo $languages;?>
-				<!-- / languages -->
+        <div id="searchbox-wrapper">
+          <!-- languages -->
+          <?php echo $languages;?>
+          <!-- / languages -->
 
-				<!-- searchform -->
-				<?php echo $search; ?>
-				<!-- / searchform -->
+          <!-- searchform -->
+          <?php echo $search; ?>
+          <!-- / searchform -->
+        </div>
 
 			</div>
 			<!-- / searchbox -->
