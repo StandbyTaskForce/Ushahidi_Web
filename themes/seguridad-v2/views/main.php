@@ -29,7 +29,7 @@ $(function(){
 
 		<!-- right column -->
 		<div id="report-map-filter-box" class="clearingfix">
-	    <a class="btn toggle" id="filter-menu-toggle" class="" href="#the-filters"><?php echo Kohana::lang('ui_main.filter_reports_by'); ?><span class="btn-icon ic-right">&raquo;</span></a>
+	    <a class="btn toggle" id="filter-menu-toggle" class="" href="#the-filters">Filter Reports By <span class="btn-icon ic-right">&raquo;</span></a>
 	    
 	    <!-- filters box -->
 	    <div id="the-filters" class="map-menu-box">
@@ -95,14 +95,15 @@ $(function(){
   						<li><a id="media_2" href="#"><span><?php echo Kohana::lang('ui_main.video'); ?></span></a></li>
   						<li><a id="media_0" href="#"><span><?php echo Kohana::lang('ui_main.all'); ?></span></a></li>
   					</ul>
-  					<div class="floatbox">
-      					<?php
-      					// Action::main_filters - Add items to the main_filters
-      					Event::run('ushahidi_action.map_main_filters');
-      					?>
-      				</div>
-      				<!-- / report type filters -->
   			</div>
+  			<!-- / report type filters -->
+  			
+  			<div class="floatbox">
+  				<?php
+					// Action::main_filters - Add items to the main_filters
+					Event::run('ushahidi_action.map_main_filters');
+					?>
+				</div>
       			
 			</div>
 			<!-- / filters box -->
