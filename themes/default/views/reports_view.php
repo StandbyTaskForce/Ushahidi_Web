@@ -63,20 +63,23 @@
 			?>
 		</div>
 		
+		<?php
+		// Action::report_display_media - Add content just above media section
+	    Event::run('ushahidi_action.report_display_media', $incident_id);
+		?>
+
 		<!-- start report media -->
 		<div class="<?php if( count($incident_photos) > 0 || count($incident_videos) > 0){ echo "report-media";}?>">
 	    <?php 
 	    // if there are images, show them
 	    if( count($incident_photos) > 0 )
-	    { 
-	      echo '<div id="report-images">';
-          foreach ($incident_photos as $photo)
-          {
-          	$thumb = str_replace(".","_t.",$photo);
-          	$prefix = url::base().Kohana::config('upload.relative_directory');
-          	echo '<a class="photothumb" rel="lightbox-group1" href="'.$prefix.'/'.$photo.'"><img src="'.$prefix.'/'.$thumb.'"/></a> ';
-          };
-				echo '</div>';  
+	    {
+			echo '<div id="report-images">';
+			foreach ($incident_photos as $photo)
+			{
+				echo '<a class="photothumb" rel="lightbox-group1" href="'.$photo['large'].'"><img src="'.$photo['thumb'].'"/></a> ';
+			};
+			echo '</div>';  
 	    }
 	    
 	    // if there are videos, show those too
@@ -93,7 +96,7 @@
           };
   			echo '</ol></div>';
         
-	    } 
+	    }
 	    ?>
 		</div>
 		
@@ -105,33 +108,36 @@
 			
 				
 			<!-- start news source link -->
+			<?php if( count($incident_news) > 0 ) { ?>
 			<div class="credibility">
 			<h5><?php echo Kohana::lang('ui_main.reports_news');?></h5>
-			<?php if( count($incident_news) > 0 ) { ?>
 					<?php
 						foreach( $incident_news as $incident_new) 
 						{
 							?>
-							<a href="<?php echo $incident_new; ?>"><?php
+							<a href="<?php echo $incident_new; ?> " target="_blank"><?php
 							echo $incident_new;?></a>
 							<br/>
 							<?php	
 						}
-					} ?>
-			<!-- end news source link -->
+			?>
 			</div>
+			<?php } ?>
+			<!-- end news source link -->
 
 			<!-- start additional fields -->
+			<?php if(strlen($custom_forms) > 0) { ?>
 			<div class="credibility">
-			<h5>Additional Information</a>
-			</h5>
+			<h5><?php echo Kohana::lang('ui_main.additional_data');?></h5>
 			<?php
+
 				echo $custom_forms;
 
 			?>
-			<br/>
-			<!-- end additional fields -->
+			<br/>			
 			</div>
+			<?php } ?>
+			<!-- end additional fields -->
 
 			<?php if ($features_count)
 			{

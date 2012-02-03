@@ -92,10 +92,25 @@ class Reports_Controller extends Main_Controller {
 		$total_reports = Incident_Model::get_total_reports(TRUE);
 
 		// Get the date of the oldest report
-		$oldest_timestamp = Incident_Model::get_oldest_report_timestamp();
+		if (isset($_GET['s']) AND !empty($_GET['s']) AND intval($_GET['s']) > 0)
+		{
+			$oldest_timestamp =  intval($_GET['s']);
+		}
+		else
+		{
+			$oldest_timestamp = Incident_Model::get_oldest_report_timestamp();
+		}
 		
-		// Get the date of the latest report
-		$latest_timestamp = Incident_Model::get_latest_report_timestamp();
+		//Get the date of the latest report
+		if (isset($_GET['e']) AND !empty($_GET['e']) AND intval($_GET['e']) > 0)
+		{
+			$latest_timestamp = intval($_GET['e']);
+		}
+		else
+		{
+			$latest_timestamp = Incident_Model::get_latest_report_timestamp();
+		}
+
 
 		// Round the number of days up to the nearest full day
 		$days_since = ceil((time() - $oldest_timestamp) / 86400);
@@ -243,8 +258,7 @@ class Reports_Controller extends Main_Controller {
 		$this->template->api_url = Kohana::config('settings.api_url');
 
 		// Setup and initialize form field names
-		$form = array
-		(
+		$form = array(
 			'incident_title' => '',
 			'incident_description' => '',
 			'incident_date' => '',
@@ -261,6 +275,7 @@ class Reports_Controller extends Main_Controller {
 			'incident_news' => array(),
 			'incident_video' => array(),
 			'incident_photo' => array(),
+			'incident_zoom' => intval(Kohana::config('settings.default_zoom')),
 			'person_first' => '',
 			'person_last' => '',
 			'person_email' => '',
@@ -333,8 +348,18 @@ class Reports_Controller extends Main_Controller {
 
 				// Action::report_add/report_submit - Added a New Report
 				//++ Do we need two events for this? Or will one suffice?
-				Event::run('ushahidi_action.report_add', $incident);
+				//ETHERTON: Yes. Those of us who often write plugins for
+				//Ushahidi would like to have access to the $post arrays
+				//and the report object. Back in the day we even had access
+				//to the $post object, so if our plugins didn't get the 
+				//appropriate input we could raise an error, but alas,
+				//those days are gone. Now I suppose you could do something
+				//like Event::run('ushahidi_action.report_add', array($post, $incident));
+				//but for the sake of backward's compatibility, please don't
+				//Thanks.
 				Event::run('ushahidi_action.report_submit', $post);
+				Event::run('ushahidi_action.report_add', $incident);
+				
 
 				url::redirect('reports/thanks');
 			}
@@ -438,8 +463,7 @@ class Reports_Controller extends Main_Controller {
 			// Comment Post?
 			// Setup and initialize form field names
 
-			$form = array
-			(
+			$form = array(
 				'comment_author' => '',
 				'comment_description' => '',
 				'comment_email' => '',
@@ -641,7 +665,10 @@ class Reports_Controller extends Main_Controller {
 				}
 				elseif ($media->media_type == 1)
 				{
-					$incident_photo[] = $media->media_link;
+					$incident_photo[] = array(
+											'large' => url::convert_uploaded_to_abs($media->media_link),
+											'thumb' => url::convert_uploaded_to_abs($media->media_thumb)
+											);
 				}
 			}
 

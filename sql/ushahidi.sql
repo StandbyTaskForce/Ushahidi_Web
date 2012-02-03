@@ -1,5 +1,5 @@
 ﻿-- Ushahidi Engine
--- version 60
+-- version 66
 -- http://www.ushahidi.com
 
 
@@ -7,54 +7,6 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
 
 -- --------------------------------------------------------
-
-/**
- * Table structure for table `actions`
- * 
- */
-
-CREATE TABLE `actions` (
-	`action_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-	`action` VARCHAR( 75 ) NOT NULL ,
-	`qualifiers` TEXT NOT NULL ,
-	`response` VARCHAR( 75 ) NOT NULL ,
-	`response_vars` TEXT NOT NULL,
-	`active` TINYINT NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-/**
- * Table structure for table `actions_log`
- * 
- */
-
-CREATE TABLE `actions_log` (
-`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-`action_id` INT NOT NULL ,
-`user_id` INT NOT NULL ,
-`time` INT( 10 ) NOT NULL
-) ENGINE = MYISAM DEFAULT CHARSET=utf8;
-
-/**
- * Table structure for table `badge`
- * 
- */
-
-CREATE TABLE `badge` (
-`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-`name` VARCHAR( 250 ) NOT NULL ,
-`description` TEXT NOT NULL
-) ENGINE=MYISAM DEFAULT CHARSET=utf8;
-
-/**
- * Table structure for table `badge_assignment`
- * 
- */
-
-CREATE TABLE `badge_users` (
-`user_id` INT NOT NULL ,
-`badge_id` INT NOT NULL ,
-PRIMARY KEY ( `user_id` , `badge_id` )
-) ENGINE=MYISAM DEFAULT CHARSET=utf8;
 
 /**
  * Table structure for table `category`
@@ -70,8 +22,8 @@ CREATE TABLE IF NOT EXISTS `category` (
     `category_title` varchar(255) default NULL,                                     
     `category_description` text default NULL,                                       
     `category_color` varchar(20) default NULL,                                      
-    `category_image` varchar(100) default NULL,                                     
-    `category_image_thumb` varchar(100) default NULL,                               
+    `category_image` varchar(255) default NULL,                                     
+    `category_image_thumb` varchar(255) default NULL,                               
     `category_image_shadow` varchar(100) default NULL,                              
     `category_visible` tinyint(4) NOT NULL default '1',                             
     `category_trusted` tinyint(4) NOT NULL default '0',
@@ -397,8 +349,6 @@ CREATE TABLE IF NOT EXISTS `incident` (
     `incident_mode` tinyint(4) NOT NULL default '1' COMMENT '1 - WEB, 2 - SMS, 3 - EMAIL, 4 - TWITTER',    
     `incident_active` tinyint(4) NOT NULL default '0',                              
     `incident_verified` tinyint(4) NOT NULL default '0',                            
-    `incident_source` varchar(5) default NULL,                                      
-    `incident_information` varchar(5) default NULL,                                 
     `incident_rating` VARCHAR(15) DEFAULT '0' NOT NULL,                             
     `incident_dateadd` datetime default NULL,                                       
     `incident_dateadd_gmt` datetime default NULL,                                   
@@ -418,7 +368,7 @@ CREATE TABLE IF NOT EXISTS `incident` (
 
 LOCK TABLES `incident` WRITE;
 /*!40000 ALTER TABLE `incident` DISABLE KEYS */;
-INSERT INTO `incident` VALUES (1,1,1,'en_US',1,'Hello Ushahidi!','Welcome to Ushahidi. Please replace this report with a valid incident','2010-01-01 12:00:00',1,1,1,'0','2010-01-01 12:00:00','0',NULL,NULL,NULL,'0',NULL);
+INSERT INTO `incident` VALUES (1,1,1,'en_US',1,'Hello Ushahidi!','Welcome to Ushahidi. Please replace this report with a valid incident','2010-01-01 12:00:00',1,1,1,'0',NULL,NULL,NULL,'0',NULL);
 /*!40000 ALTER TABLE `incident` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -500,7 +450,8 @@ CREATE TABLE IF NOT EXISTS `incident_person` (
 CREATE TABLE IF NOT EXISTS `comment`                                                
 (
     `id` BIGINT unsigned  NOT NULL AUTO_INCREMENT ,                                 
-    `incident_id` BIGINT NOT NULL,                                                  
+    `incident_id` BIGINT DEFAULT NULL,
+  	`checkin_id` BIGINT DEFAULT NULL,                                                  
     `user_id` INT(11) DEFAULT 0,                                                    
     `comment_author` VARCHAR(100) default NULL,                                     
     `comment_email` VARCHAR(120) default NULL,                                      
@@ -761,7 +712,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
     `site_tagline` varchar(255) default NULL,
     `site_banner_id` int(11) default NULL,
     `site_email` varchar(120) default NULL,
-    `site_key` varchar(100) default NULL,                                           
+    `site_key` varchar(100) default NULL,
     `site_language` varchar(10) NOT NULL default 'en_US',                           
     `site_style` varchar(50) NOT NULL default 'default',                            
     `site_timezone` varchar(80) default NULL,                                       
@@ -779,7 +730,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
     `cache_pages_lifetime` int(4) NOT NULL DEFAULT '1800',
     `private_deployment` tinyint(4) NOT NULL DEFAULT '0',
     `default_map` varchar(100) NOT NULL DEFAULT 'google_normal',
-    `default_map_all` varchar(20) NOT NULL default 'CC0000',                        
+    `default_map_all` varchar(20) NOT NULL default 'CC0000',
     `api_google` varchar(200) default NULL,                                         
     `api_yahoo` varchar(200) default NULL,                                          
     `api_live` varchar(200) default NULL,                                           
@@ -790,8 +741,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
     `default_lat` varchar(100) default NULL,                                        
     `default_lon` varchar(100) default NULL,                                        
     `default_zoom` tinyint(4) NOT NULL default '10',                                
-    `items_per_page` smallint(6) NOT NULL default '20',                             
-    `items_per_page_admin` smallint(6) NOT NULL default '20',                       
+    `items_per_page` smallint(6) NOT NULL default '5',
+    `items_per_page_admin` smallint(6) NOT NULL default '20',
     `sms_provider` varchar(100) NULL DEFAULT NULL,
     `sms_no1` varchar(100) default NULL,                                            
     `sms_no2` varchar(100) default NULL,                                            
@@ -803,8 +754,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
     `date_modify` datetime default NULL,                                            
     `stat_id` BIGINT default NULL COMMENT 'comes from centralized stats',           
     `stat_key` VARCHAR(30) NOT NULL ,                                               
-    `email_username` VARCHAR(100) NOT NULL ,                                        
-    `email_password` VARCHAR(100) NOT NULL ,                                        
+    `email_username` VARCHAR(100) NOT NULL ,
+    `email_password` VARCHAR(100) NOT NULL ,
     `email_port` INT(11) NOT NULL ,                                                 
     `email_host` VARCHAR(100) NOT NULL ,                                            
     `email_servertype` VARCHAR(100) NOT NULL ,                                      
@@ -824,7 +775,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 -- Dumping data for table `settings`
 
 INSERT INTO `settings` (`id`, `site_name`, `api_google`, `api_yahoo`, `api_live`, `default_country`, `default_city`, `default_lat`, `default_lon`, `default_zoom`, `items_per_page`, `items_per_page_admin`, `blocks`, `date_modify`) VALUES
-(1, 'Ushahidi', 'ABQIAAAAjsEM5UsvCPCIHp80spK1kBQKW7L4j6gYznY0oMkScAbKwifzxxRhJ3SP_ijydkmJpN3jX8kn5r5fEQ', '5CYeWbfV34E21JOW1a4.54Mf6e9jLNkD0HVzaKoQmJZi2qzmSZd5mD8X49x7', NULL, 115, 'nairobi', '-1.2873000707050097', '36.821451182008204', 13, 20, 20, 'reports_block|news_block', '2008-08-25 10:25:18');
+(1, 'Ushahidi', 'ABQIAAAAjsEM5UsvCPCIHp80spK1kBQKW7L4j6gYznY0oMkScAbKwifzxxRhJ3SP_ijydkmJpN3jX8kn5r5fEQ', '5CYeWbfV34E21JOW1a4.54Mf6e9jLNkD0HVzaKoQmJZi2qzmSZd5mD8X49x7', NULL, 115, 'nairobi', '-1.2873000707050097', '36.821451182008204', 13, 5, 20, 'reports_block|news_block', '2008-08-25 10:25:18');
 
 
 /**
@@ -833,11 +784,11 @@ INSERT INTO `settings` (`id`, `site_name`, `api_google`, `api_yahoo`, `api_live`
 */
 
 CREATE TABLE IF NOT EXISTS `users` (                                                
-    `id` int(11) unsigned NOT NULL auto_increment,                                  
-    `name` varchar(200) default NULL,                                               
-    `email` varchar(127) NOT NULL,                                                  
-    `username` varchar(31) NOT NULL default '',                                     
-    `password` char(50) NOT NULL,                                                   
+    `id` int(11) unsigned NOT NULL auto_increment,
+    `name` varchar(200) default NULL,
+    `email` varchar(127) NOT NULL,
+    `username` varchar(100) NOT NULL default '',
+    `password` char(50) NOT NULL,
     `logins` int(10) unsigned NOT NULL default '0',                                 
     `last_login` int(10) unsigned default NULL,                                     
     `notify` tinyint(1) NOT NULL default '0' COMMENT 'Flag incase admin opts in for email notifications',    
@@ -1455,9 +1406,52 @@ ALTER TABLE `form_field` ADD  `field_ispublic_submit` tinyint(4) NOT NULL defaul
 ALTER TABLE `roles` ADD `access_level` tinyint(4) NOT NULL default '0';
 
 /**
+ * Table structure for table `actions`
+ * 
+ */
+CREATE TABLE IF NOT EXISTS `actions` (
+	`action_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+	`action` VARCHAR( 75 ) NOT NULL ,
+	`qualifiers` TEXT NOT NULL ,
+	`response` VARCHAR( 75 ) NOT NULL ,
+	`response_vars` TEXT NOT NULL,
+	`active` TINYINT NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+/**
+ * Table structure for table `actions_log`
+ * 
+ */
+CREATE TABLE IF NOT EXISTS `actions_log` (
+	`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+	`action_id` INT NOT NULL ,
+	`user_id` INT NOT NULL ,
+	`time` INT( 10 ) NOT NULL
+) ENGINE = MYISAM DEFAULT CHARSET=utf8;
+
+/**
+ * Table structure for table `badge`
+ * 
+ */
+CREATE TABLE IF NOT EXISTS `badge` (
+	`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+	`name` VARCHAR( 250 ) NOT NULL ,
+	`description` TEXT NOT NULL
+) ENGINE=MYISAM DEFAULT CHARSET=utf8;
+
+/**
+ * Table structure for table `badge_assignment`
+ * 
+ */
+CREATE TABLE IF NOT EXISTS `badge_users` (
+	`user_id` INT NOT NULL ,
+	`badge_id` INT NOT NULL ,
+	PRIMARY KEY (`user_id` , `badge_id`)
+) ENGINE=MYISAM DEFAULT CHARSET=utf8;
+
+/**
 * Add field to table `settings`
 */
-
 ALTER TABLE `settings` ADD `allow_alerts` tinyint(4) NOT NULL DEFAULT '0';
 
 
@@ -1466,4 +1460,4 @@ ALTER TABLE `settings` ADD `allow_alerts` tinyint(4) NOT NULL DEFAULT '0';
 * 
 */
 UPDATE `settings` SET `ushahidi_version` = '2.1' WHERE `id`=1 LIMIT 1;
-UPDATE `settings` SET `db_version` = '66' WHERE `id`=1 LIMIT 1;
+UPDATE `settings` SET `db_version` = '70' WHERE `id`=1 LIMIT 1;

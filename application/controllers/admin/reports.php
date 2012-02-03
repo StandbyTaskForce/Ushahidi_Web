@@ -20,6 +20,7 @@ class Reports_Controller extends Admin_Controller {
 		parent::__construct();
 
 		$this->template->this_page = 'reports';
+		$this->params = array('all_reports' => TRUE);
 	}
 
 
@@ -39,8 +40,9 @@ class Reports_Controller extends Admin_Controller {
 		$this->template->content = new View('admin/reports');
 		$this->template->content->title = Kohana::lang('ui_admin.reports');
 		
-		// To 
-		$params = array('all_reports' => TRUE);
+		//hook into the event for the reports::fetch_incidents() method
+		Event::add('ushahidi_filter.fetch_incidents_set_params', array($this,'_add_incident_filters'));
+
 		
 		$status = "0";
 		
@@ -50,18 +52,18 @@ class Reports_Controller extends Admin_Controller {
 
 			if (strtolower($status) == 'a')
 			{
-				array_push($params, 'i.incident_active = 0');
+				array_push($this->params, 'i.incident_active = 0');
 			}
 			elseif (strtolower($status) == 'v')
 			{
-				array_push($params, 'i.incident_verified = 0');
+				array_push($this->params, 'i.incident_verified = 0');
 			}
 			else
 			{
 				$status = "0";
 			}
 		}
-
+		
 		// Get Search Keywords (If Any)
 		if (isset($_GET['k']))
 		{
@@ -77,7 +79,9 @@ class Reports_Controller extends Admin_Controller {
 			// in the first 2 steps
 			$keyword_raw = $this->input->xss_clean($keyword_raw);
 			
-			$filter .= " AND (".$this->_get_searchstring($keyword_raw).")";
+			$filter = " (".$this->_get_searchstring($keyword_raw).")";
+			
+			array_push($this->params, $filter);
 		}
 		else
 		{
@@ -183,7 +187,8 @@ class Reports_Controller extends Admin_Controller {
 								$update->incident_verified = '0';
 								$verify->verified_status = '0';
 							}
-							else {
+							else
+							{
 								$update->incident_verified = '1';
 								$verify->verified_status = '2';
 							}
@@ -263,19 +268,25 @@ class Reports_Controller extends Admin_Controller {
 
 		}
 
-		$all_reports = Incident_Model::get_incidents($params);
+	
+		// Fetch all incidents
+		$all_incidents = reports::fetch_incidents();
 		
 		// Pagination
 		$pagination = new Pagination(array(
-			'query_string'	 => 'page',
-			'items_per_page' => $this->items_per_page,
-			'total_items'	 => $all_reports->count()
-			)
-		);
+				'style' => 'front-end-reports',
+				'query_string' => 'page',
+				'items_per_page' => (int) Kohana::config('settings.items_per_page'),
+				'total_items' => $all_incidents->count()
+				));
+				
+		Event::run('ushahidi_filter.pagination',$pagination);				
+
+		// Reports
+		$incidents = Incident_Model::get_incidents(reports::$params, $pagination);
 		
-		// Get the paginated reports
-		$incidents = Incident_Model::get_incidents($params, $pagination);
 	
+		Event::run('ushahidi_filter.filter_incidents',$incidents);
 		$this->template->content->countries = Country_Model::get_countries_list();
 		$this->template->content->incidents = $incidents;
 		$this->template->content->pagination = $pagination;
@@ -339,8 +350,6 @@ class Reports_Controller extends Admin_Controller {
 			'custom_field' => array(),
 			'incident_active' => '',
 			'incident_verified' => '',
-			'incident_source' => '',
-			'incident_information' => '',
 			'incident_zoom' => ''
 		);
 
@@ -366,7 +375,7 @@ class Reports_Controller extends Admin_Controller {
 		$this->template->content->locale_array = Kohana::config('locale.all_languages');
 
 		// Create Categories
-		$this->template->content->categories = Category_Model::get_categories();
+		$this->template->content->categories = Category_Model::get_categories(0, TRUE, FALSE);
 		$this->template->content->new_categories_form = $this->_new_categories_form_arr();
 
 		// Time formatting
@@ -453,6 +462,15 @@ class Reports_Controller extends Admin_Controller {
 					$form['longitude'] = $message->reporter->location->longitude;
 					$form['location_name'] = $message->reporter->location->location_name;
 				}
+
+				//Events to manipulate an already known location
+
+				Event::run('ushahidi_action.location_from',$message_from = $message->message_from);
+				//filter location name
+				Event::run('ushahidi_filter.location_name',$form['location_name']);
+				//filter //location find
+				Event::run('ushahidi_filter.location_find',$form['location_find']);
+
 
 				// Retrieve Last 5 Messages From this account
 				$this->template->content->all_messages = ORM::factory('message')
@@ -692,8 +710,7 @@ class Reports_Controller extends Admin_Controller {
 					}
 					
 					// Combine Everything
-					$incident_arr = array
-					(
+					$incident_arr = array(
 						'location_id' => $incident->location->id,
 						'form_id' => $incident->form_id,
 						'locale' => $incident->locale,
@@ -717,8 +734,6 @@ class Reports_Controller extends Admin_Controller {
 						'custom_field' => customforms::get_custom_form_fields($id,$incident->form_id,true),
 						'incident_active' => $incident->incident_active,
 						'incident_verified' => $incident->incident_verified,
-						'incident_source' => $incident->incident_source,
-						'incident_information' => $incident->incident_information,
 						'incident_zoom' => $incident->incident_zoom
 					);
 
@@ -799,8 +814,8 @@ class Reports_Controller extends Admin_Controller {
 	/**
 	 * Download Reports in CSV format
 	 */
-	function download()
-	{
+	public function download()
+	{		
 		// If user doesn't have access, redirect to dashboard
 		if ( ! admin::permissions($this->user, "reports_download"))
 		{
@@ -840,17 +855,20 @@ class Reports_Controller extends Admin_Controller {
 			if (!empty($_POST['from_date']) OR !empty($_POST['to_date']))
 			{
 				// Valid FROM Date?
-				if (empty($_POST['from_date']) OR (strtotime($_POST['from_date']) > strtotime("today"))) {
+				if (empty($_POST['from_date']) OR (strtotime($_POST['from_date']) > strtotime("today")))
+				{
 					$post->add_error('from_date','range');
 				}
 
 				// Valid TO date?
-				if (empty($_POST['to_date']) OR (strtotime($_POST['to_date']) > strtotime("today"))) {
+				if (empty($_POST['to_date']) OR (strtotime($_POST['to_date']) > strtotime("today")))
+				{
 					$post->add_error('to_date','range');
 				}
 
 				// TO Date not greater than FROM Date?
-				if (strtotime($_POST['from_date']) > strtotime($_POST['to_date'])) {
+				if (strtotime($_POST['from_date']) > strtotime($_POST['to_date']))
+				{
 					$post->add_error('to_date','range_greater');
 				}
 			}
@@ -859,7 +877,7 @@ class Reports_Controller extends Admin_Controller {
 			if ($post->validate())
 			{
 				// Add Filters
-				$filter = " ( 1=1";
+				$filter = " ( 1 !=1";
 				
 				// Report Type Filter
 				foreach($post->data_point as $item)
@@ -887,100 +905,117 @@ class Reports_Controller extends Admin_Controller {
 				$filter .= ") ";
 
 				// Report Date Filter
-				if (!empty($post->from_date) AND !empty($post->to_date))
+				if ( ! empty($post->from_date) AND !empty($post->to_date))
 				{
-					$filter .= " AND ( incident_date >= '" . date("Y-m-d H:i:s",strtotime($post->from_date)) . "' AND incident_date <= '" . date("Y-m-d H:i:s",strtotime($post->to_date)) . "' ) ";
+					$filter .= " AND ( incident_date >= '" . date("Y-m-d H:i:s",strtotime($post->from_date))
+							. "' AND incident_date <= '" . date("Y-m-d H:i:s",strtotime($post->to_date)) . "' ) ";
 				}
 
 				// Retrieve reports
 				$incidents = ORM::factory('incident')->where($filter)->orderby('incident_dateadd', 'desc')->find_all();
 
 				// Column Titles
-				$report_csv = "#,INCIDENT TITLE,INCIDENT DATE";
+				ob_start();
+				echo "#,INCIDENT TITLE,INCIDENT DATE";
 				foreach($post->data_include as $item)
 				{
 					if ($item == 1) {
-						$report_csv .= ",LOCATION";
+						echo ",LOCATION";
 					}
 					
 					if ($item == 2) {
-						$report_csv .= ",DESCRIPTION";
+						echo ",DESCRIPTION";
 					}
 					
 					if ($item == 3) {
-						$report_csv .= ",CATEGORY";
+						echo ",CATEGORY";
 					}
 					
 					if ($item == 4) {
-						$report_csv .= ",LATITUDE";
+						echo ",LATITUDE";
 					}
 					
 					if($item == 5) {
-						$report_csv .= ",LONGITUDE";
+						echo ",LONGITUDE";
 					}
 					if($item == 6)
 					{
-						$custom_titles = ORM::factory('form_field')->orderby('field_position','desc')->find_all();
+						$custom_titles = customforms::get_custom_form_fields('','',false);
 						foreach($custom_titles as $field_name)
 						{
 
-							$report_csv .= ",".$field_name->field_name;
+							echo ",".$field_name['field_name'];
 						}	
 
 					}
 
 				}
 				
-				$report_csv .= ",APPROVED,VERIFIED";
+				echo ",APPROVED,VERIFIED";
 				
+				//Incase a plugin would like to add some custom fields
+				$custom_headers = "";
+				Event::run('ushahidi_filter.report_download_csv_header', $custom_headers);
+				echo $custom_headers;
 				
-				$report_csv .= "\n";
+				echo "\n";
 
 				foreach ($incidents as $incident)
 				{
-					$report_csv .= '"'.$incident->id.'",';
-					$report_csv .= '"'.$this->_csv_text($incident->incident_title).'",';
-					$report_csv .= '"'.$incident->incident_date.'"';
+					echo '"'.$incident->id.'",';
+					echo '"'.$this->_csv_text($incident->incident_title).'",';
+					echo '"'.$incident->incident_date.'"';
 
 					foreach($post->data_include as $item)
 					{
 						switch ($item)
 						{
 							case 1:
-								$report_csv .= ',"'.$this->_csv_text($incident->location->location_name).'"';
+								echo ',"'.$this->_csv_text($incident->location->location_name).'"';
 							break;
 
 							case 2:
-								$report_csv .= ',"'.$this->_csv_text($incident->incident_description).'"';
+								echo ',"'.$this->_csv_text($incident->incident_description).'"';
 							break;
 
 							case 3:
-								$report_csv .= ',"';
+								echo ',"';
 							
 								foreach($incident->incident_category as $category)
 								{
 									if ($category->category->category_title)
 									{
-										$report_csv .= $this->_csv_text($category->category->category_title) . ", ";
+										echo $this->_csv_text($category->category->category_title) . ", ";
 									}
 								}
-								$report_csv .= '"';
+								echo '"';
 							break;
 						
 							case 4:
-								$report_csv .= ',"'.$this->_csv_text($incident->location->latitude).'"';
+								echo ',"'.$this->_csv_text($incident->location->latitude).'"';
 							break;
 						
 							case 5:
-								$report_csv .= ',"'.$this->_csv_text($incident->location->longitude).'"';
+								echo ',"'.$this->_csv_text($incident->location->longitude).'"';
 							break;
 
 							case 6:
 								$incident_id = $incident->id;
-								$custom_fields = ORM::factory('form_response')->where('incident_id',$incident_id)->orderby('form_field_id','desc')->find_all();
-								foreach($custom_fields as $custom_field)
+								$custom_fields = customforms::get_custom_form_fields($incident_id,'',false);
+								if ( ! empty($custom_fields))
 								{
-									$report_csv .=',"'.$this->_csv_text($custom_field->form_response).'"';
+									foreach($custom_fields as $custom_field)
+									{
+										echo',"'.$this->_csv_text($custom_field['field_response']).'"';
+									}
+								}
+								else
+								{
+									$custom_field = customforms::get_custom_form_fields('','',false);
+									foreach ($custom_field as $custom)
+									{
+										echo',"'.$this->_csv_text("").'"';
+									}
 								}	
 								break;
 
@@ -989,24 +1024,30 @@ class Reports_Controller extends Admin_Controller {
 					
 					if ($incident->incident_active)
 					{
-						$report_csv .= ",YES";
+						echo ",YES";
 					}
 					else
 					{
-						$report_csv .= ",NO";
+						echo ",NO";
 					}
 					
 					if ($incident->incident_verified)
 					{
-						$report_csv .= ",YES";
+						echo ",YES";
 					}
 					else
 					{
-						$report_csv .= ",NO";
+						echo ",NO";
 					}
 					
-					$report_csv .= "\n";
+					//Incase a plugin would like to add some custom data for an incident
+					$event_data = array("report_csv" => "", "incident" => $incident);
+					Event::run('ushahidi_filter.report_download_csv_incident', $event_data);
+					echo $event_data['report_csv'];
+					
+					echo "\n";
 				}
+				$report_csv = ob_get_clean();
 
 				// Output to browser
 				header("Content-type: text/x-csv");
@@ -1114,7 +1155,7 @@ class Reports_Controller extends Admin_Controller {
 	* @param bool|string $saved
 	*/
 
-	function translate( $id = false, $saved = false )
+	public function translate( $id = false, $saved = FALSE)
 	{
 		$this->template->content = new View('admin/reports_translate');
 		$this->template->content->title = Kohana::lang('ui_admin.translate_reports');
@@ -1145,23 +1186,17 @@ class Reports_Controller extends Admin_Controller {
 
 
 		// Setup and initialize form field names
-		$form = array
-		(
+		$form = array(
 			'locale'	  => '',
 			'incident_title'	  => '',
 			'incident_description'	  => ''
 		);
+		
 		// Copy the form as errors, so the errors will be stored with keys corresponding to the form field names
 		$errors = $form;
 		$form_error = FALSE;
-		if ($saved == 'saved')
-		{
-			$form_saved = TRUE;
-		}
-		else
-		{
-			$form_saved = FALSE;
-		}
+		
+		$form_saved = ($saved == 'saved')? TRUE : FALSE;
 
 		// Locale (Language) Array
 		$this->template->content->locale_array = Kohana::config('locale.all_languages');
@@ -1226,7 +1261,7 @@ class Reports_Controller extends Admin_Controller {
 		}
 		else
 		{
-			if ( $id )
+			if ($id)
 			{
 				// Retrieve Current Incident
 				$incident_l = ORM::factory('incident_lang', $id)->where('incident_id', $incident_id)->find();
@@ -1260,7 +1295,7 @@ class Reports_Controller extends Admin_Controller {
 	/**
 	* Save newly added dynamic categories
 	*/
-	function save_category()
+	public function save_category()
 	{
 		$this->auto_render = FALSE;
 		$this->template = "";
@@ -1293,7 +1328,6 @@ class Reports_Controller extends Admin_Controller {
 
 				echo json_encode(array("status"=>"saved", "id"=>$category->id));
 			}
-
 			else
 
 			{
@@ -1310,26 +1344,43 @@ class Reports_Controller extends Admin_Controller {
 	* Delete Photo
 	* @param int $id The unique id of the photo to be deleted
 	*/
-	function deletePhoto ( $id )
+	public function deletePhoto ($id)
 	{
 		$this->auto_render = FALSE;
 		$this->template = "";
 
-		if ( $id )
+		if ($id)
 		{
 			$photo = ORM::factory('media', $id);
 			$photo_large = $photo->media_link;
+			$photo_medium = $photo->media_medium;
 			$photo_thumb = $photo->media_thumb;
-
-			// Delete Files from Directory
-			if ( ! empty($photo_large))
+			
+			if (file_exists(Kohana::config('upload.directory', TRUE).$photo_large))
 			{
-				unlink(Kohana::config('upload.directory', TRUE) . $photo_large);
+				unlink(Kohana::config('upload.directory', TRUE).$photo_large);
+			}
+			elseif (Kohana::config("cdn.cdn_store_dynamic_content") AND valid::url($photo_large))
+			{
+				cdn::delete($photo_large);
 			}
 			
-			if ( ! empty($photo_thumb))
+			if (file_exists(Kohana::config('upload.directory', TRUE).$photo_medium))
 			{
-				unlink(Kohana::config('upload.directory', TRUE) . $photo_thumb);
+				unlink(Kohana::config('upload.directory', TRUE).$photo_medium);
+			}
+			elseif (Kohana::config("cdn.cdn_store_dynamic_content") AND valid::url($photo_medium))
+			{
+				cdn::delete($photo_medium);
+			}
+
+			if (file_exists(Kohana::config('upload.directory', TRUE).$photo_thumb))
+			{
+				unlink(Kohana::config('upload.directory', TRUE).$photo_thumb);
+			}
+			elseif (Kohana::config("cdn.cdn_store_dynamic_content") AND valid::url($photo_thumb))
+			{
+				cdn::delete($photo_thumb);
 			}
 
 			// Finally Remove from DB
@@ -1342,8 +1393,7 @@ class Reports_Controller extends Admin_Controller {
 	// Dynamic categories form fields
 	private function _new_categories_form_arr()
 	{
-		return array
-		(
+		return array(
 			'category_name' => '',
 			'category_description' => '',
 			'category_color' => '',
@@ -1388,26 +1438,26 @@ class Reports_Controller extends Admin_Controller {
 	}
 
 	// Javascript functions
-	 private function _color_picker_js()
+	private function _color_picker_js()
 	{
-	 return "<script type=\"text/javascript\">
-				$(document).ready(function() {
-				$('#category_color').ColorPicker({
-						onSubmit: function(hsb, hex, rgb) {
-							$('#category_color').val(hex);
-						},
-						onChange: function(hsb, hex, rgb) {
-							$('#category_color').val(hex);
-						},
-						onBeforeShow: function () {
-							$(this).ColorPickerSetColor(this.value);
-						}
-					})
-				.bind('keyup', function(){
-					$(this).ColorPickerSetColor(this.value);
-				});
-				});
-			</script>";
+		 return "<script type=\"text/javascript\">
+					$(document).ready(function() {
+					$('#category_color').ColorPicker({
+							onSubmit: function(hsb, hex, rgb) {
+								$('#category_color').val(hex);
+							},
+							onChange: function(hsb, hex, rgb) {
+								$('#category_color').val(hex);
+							},
+							onBeforeShow: function () {
+								$(this).ColorPickerSetColor(this.value);
+							}
+						})
+					.bind('keyup', function(){
+						$(this).ColorPickerSetColor(this.value);
+					});
+					});
+				</script>";
 	}
 
 	private function _date_picker_js()
@@ -1475,7 +1525,10 @@ class Reports_Controller extends Admin_Controller {
 		$or = '';
 		$where_string = '';
 
-
+		/**
+		 * NOTES: 2011-11-17 - John Etherton <john@ethertontech.com> I'm pretty sure this needs to be
+		 * internationalized, seems rather biased towards English.
+		 * */
 		// Stop words that we won't search for
 		// Add words as needed!!
 		$stop_words = array('the', 'and', 'a', 'to', 'of', 'in', 'i', 'is', 'that', 'it',
@@ -1484,38 +1537,51 @@ class Reports_Controller extends Admin_Controller {
 
 		$keywords = explode(' ', $keyword_raw);
 		
-		if (is_array($keywords) && !empty($keywords))
+		if (is_array($keywords) AND !empty($keywords))
 		{
 			array_change_key_case($keywords, CASE_LOWER);
 			$i = 0;
 			
-			foreach($keywords as $value)
+			foreach ($keywords as $value)
 			{
-				if (!in_array($value,$stop_words) && !empty($value))
+				if (!in_array($value,$stop_words) AND !empty($value))
 				{
-					$chunk = mysql_real_escape_string($value);
-					if ($i > 0) {
+					$chunk = $this->db->escape_str($value);
+					if ($i > 0)
+					{
 						$or = ' OR ';
 					}
-					$where_string = $where_string.$or."incident_title LIKE '%$chunk%' OR incident_description LIKE '%$chunk%'  OR location_name LIKE '%$chunk%'";
+					$where_string = $where_string
+									.$or
+									."incident_title LIKE '%$chunk%' OR incident_description LIKE '%$chunk%'  OR location_name LIKE '%$chunk%'";
 					$i++;
 				}
 			}
 		}
-
-		if ($where_string)
-		{
-			return $where_string;
-		}
-		else
-		{
-			return "1=1";
-		}
+		
+		// Return
+		return (!empty($where_string)) ? $where_string :  "1=1";
 	}
 
 	private function _csv_text($text)
 	{
 		$text = stripslashes(htmlspecialchars($text));
 		return $text;
+	}
+	
+	
+	/**
+	 * Adds extra filter paramters to the reports::fetch_incidents()
+	 * method. This way we can add 'all_reports=>true and other filters
+	 * that don't come standard sinc we are on the backend. 
+	 * Works by simply adding in SQL conditions to the params
+	 * array of the reprots::fetch_incidents() method
+	 * @return none
+	 */
+	public function _add_incident_filters()
+	{
+		$params = Event::$data;
+		$params = array_merge($params, $this->params);
+		Event::$data = $params;
 	}
 }

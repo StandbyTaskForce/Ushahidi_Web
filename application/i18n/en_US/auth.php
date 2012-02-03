@@ -12,11 +12,11 @@
 		'standard_text' => 'The username field contains disallowed characters.',
 	),
 	'password' => array(
-		'alpha_numeric' => 'The password must only contain numbers and letters.',
-		'length' => 'The password field must be at least 5 and no more 16 characters long.',
+		'length' => 'The password field must be at least 8 characters long.',
 		'login error' => 'Please check that you entered the correct password.',
 		'matches' => 'Please enter the same password in the two password fields.',
 		'required' => 'The password field is required.',
+		'alpha_dash' => 'The password field must have alphabetical characters, the # and @ symbols, numbers, underscores and dashes only',
 	),
 	'password_confirm' => array(
 		'matches' => 'The password confirmation field must match the password field.',
@@ -26,6 +26,9 @@
 		'invalid' => 'Sorry, we don\'t have your email address',
 		'required' => 'The email field is required.',
 	),
+	'role' => array(
+		'superadmin_modify' => 'Only a superadmin may modify a superadmin or upgrade a user to admin.',
+	),
 	'roles' => array(
 		'alpha_numeric' => 'Invalid role format.',
 		'length' => 'The role field must be at least 5 and no more than 30 characters long.',
@@ -34,9 +37,9 @@
 	),
 	'username' => array(
 		'admin' => 'The admin user role cannot be modified.',
-		'alpha' => 'The username field must only contain letters.',
+		'alpha_numeric' => 'The username field must only contain numbers and letters.',
 		'exists' => 'Sorry, this username is already in use.',
-		'length' => 'The username field must be at least 2 and no more 16 characters long.',
+		'length' => 'The username field must be at least 2 and no more 100 characters long.',
 		'login error' => 'Please check that you entered the correct username.',
 		'required' => 'The username field is required.',
 		'superadmin' => 'The super admin role cannot be modified.',

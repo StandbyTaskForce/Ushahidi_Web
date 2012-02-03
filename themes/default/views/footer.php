@@ -24,8 +24,16 @@
 				<ul class="clearingfix">
 					<li><a class="item1" href="<?php echo url::site(); ?>"><?php echo Kohana::lang('ui_main.home'); ?></a></li>
 					<li><a href="<?php echo url::site()."reports/submit"; ?>"><?php echo Kohana::lang('ui_main.submit'); ?></a></li>
-					<li><a href="<?php echo url::site()."alerts"; ?>"><?php echo Kohana::lang('ui_main.alerts'); ?></a></li>
+					<?php
+					if(Kohana::config('settings.allow_alerts'))
+					{ 
+					?>
+						<li><a href="<?php echo url::site()."alerts"; ?>"><?php echo Kohana::lang('ui_main.alerts'); ?></a></li>
+					<?php
+					}
+					?>
 					<li><a href="<?php echo url::site()."contact"; ?>"><?php echo Kohana::lang('ui_main.contact'); ?></a></li>
+	
 					<?php
 					// Action::nav_main_bottom - Add items to the bottom links
 					Event::run('ushahidi_action.nav_main_bottom');
@@ -51,9 +59,8 @@
  
 	<?php echo $ushahidi_stats; ?>
 	<?php echo $google_analytics; ?>
+	<?php echo $cdn_gradual_upgrade; ?>
 	
-	<!-- Task Scheduler --><script type="text/javascript">$(document).ready(function(){$('#schedulerholder').html('<img src="<?php echo url::base(); ?>scheduler" />');});</script><div id="schedulerholder"></div><!-- End Task Scheduler -->
- 
 	<?php
 	// Action::main_footer - Add items before the </body> tag
 	Event::run('ushahidi_action.main_footer');

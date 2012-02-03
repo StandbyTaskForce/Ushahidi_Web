@@ -111,6 +111,8 @@
 				// Clear the url parameters
 				delete urlParameters['from'];
 				delete urlParameters['to'];
+				delete urlParameters['s'];
+				delete urlParameters['e'];
 			}
 			else if ($(this).attr("id") == 'dateRangeToday')
 			{
@@ -148,6 +150,8 @@
 			{
 				urlParameters['from'] = $("#report_date_from").val();
 				urlParameters['to'] = $("#report_date_to").val();
+				delete urlParameters['s'];
+				delete urlParameters['e'];
 			}
 			
 			// Hide the box
@@ -175,6 +179,8 @@
 				// Add the parameters
 				urlParameters["from"] = report_date_from;
 				urlParameters["to"] = report_date_to;
+				delete urlParameters['s'];
+				delete urlParameters['e'];
 				
 				// Fetch the reports
 				fetchReports();
@@ -683,7 +689,6 @@
 				{
 					if(value != "" && value != undefined && value != null)
 					{
-						console.log("assinging values:");
 						customFields.push([cffId, value]);
 					}
 				}
@@ -742,6 +747,60 @@
 		});
 	}
 	
+	
+	/**
+	 * Makes a url string for the map stuff
+	 */
+	function makeUrlParamStr(str, params, arrayLevel)	 
+	{
+		//make sure arrayLevel is initialized
+		var arrayLevelStr = "";
+		if(arrayLevel != undefined)
+		{
+			arrayLevelStr = arrayLevel;
+		}
+		
+		var separator = "";
+		for(i in params)
+		{
+			//do we need to insert a separator?
+			if(str.length > 0)
+			{
+				separator = "&";
+			}
+			
+			//get the param
+			var param = params[i];
+	
+			//is it an array or not
+			if($.isArray(param))
+			{
+				if(arrayLevelStr == "")
+				{
+					str = makeUrlParamStr(str, param, i);
+				}
+				else
+				{
+					str = makeUrlParamStr(str, param, arrayLevelStr + "%5B" + i + "%5D");
+				}
+			}
+			else
+			{
+				if(arrayLevelStr == "")
+				{
+					str +=  separator + i + "=" + param.toString();
+				}
+				else
+				{
+					str +=  separator + arrayLevelStr + "%5B" + i + "%5D=" + param.toString();
+				}
+			}
+		}
+		
+		return str;
+	}
+	
+	
 	/**
 	 * Handles display of the incidents current incidents on the map
 	 * This method is only called when the map view is selected
@@ -752,17 +811,7 @@
 		fetchURL = '<?php echo url::site().'json/index' ;?>';
 		
 		// Generate the url parameter string
-		parameterStr = "";
-		$.each(urlParameters, function(key, value){
-			if (parameterStr == "")
-			{
-				parameterStr += key + "=" + value.toString();
-			}
-			else
-			{
-				parameterStr += "&" + key + "=" + value.toString();
-			}
-		});
+		parameterStr = makeUrlParamStr("", urlParameters)
 		
 		// Add the parameters to the fetch URL
 		fetchURL += '?' + parameterStr;
@@ -848,6 +897,13 @@
 			$.each($("." + filterClass +" li a.selected"), function(i, item){
 				$(item).removeClass("selected");
 			});			
+			
+			//if it's the location filter be sure to get rid of sw and ne
+			if(parameterKey == "start_loc" || parameterKey == "radius")
+			{
+				delete urlParameters["sw"];
+				delete urlParameters["ne"];
+			}
 		}
 		
 		// Remove the parameter key from urlParameters

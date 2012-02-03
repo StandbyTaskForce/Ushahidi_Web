@@ -1,17 +1,18 @@
 <div id="content">
 	<div class="content-bg">
 
-		<?php if($site_submit_report_message != '') { ?>
+		<?php if ($site_submit_report_message != ''): ?>
 			<div class="green-box" style="margin: 25px 25px 0px 25px">
 				<h3><?php echo $site_submit_report_message; ?></h3>
 			</div>
-		<?php } ?>
+		<?php endif; ?>
 
 		<!-- start report form block -->
 		<?php print form::open(NULL, array('enctype' => 'multipart/form-data', 'id' => 'reportForm', 'name' => 'reportForm', 'class' => 'gen_forms')); ?>
 		<input type="hidden" name="latitude" id="latitude" value="<?php echo $form['latitude']; ?>">
 		<input type="hidden" name="longitude" id="longitude" value="<?php echo $form['longitude']; ?>">
-		<input type="hidden" name="country_name" id="country_name" value="<?php echo $form['country_name'];?>" />
+		<input type="hidden" name="country_name" id="country_name" value="<?php echo $form['country_name']; ?>" />
+		<input type="hidden" name="incident_zoom" id="incident_zoom" value="<?php echo $form['incident_zoom']; ?>" />
 		<div class="big-block">
 			<h1><?php echo Kohana::lang('ui_main.reports_submit_new'); ?></h1>
 			<?php if ($form_error): ?>
@@ -144,12 +145,12 @@
 				</div>
 			</div>
 			<div class="report_right">
-				<?php if ( ! $multi_country AND count($cities) > 1){ ?>
+				<?php if ( ! $multi_country AND count($cities) > 1): ?>
 				<div class="report_row">
 					<h4><?php echo Kohana::lang('ui_main.reports_find_location'); ?></h4>
 					<?php print form::dropdown('select_city',$cities,'', ' class="select" '); ?>
 				</div>
-				<?php } ?>
+				<?php endif; ?>
 				<div class="report_row">
 					<div id="divMap" class="report_map">
 						<div id="geometryLabelerHolder" class="olControlNoSelect">
@@ -229,7 +230,7 @@
 
 				<!-- Video Fields -->
 				<div id="divVideo" class="report_row">
-					<h4><?php echo Kohana::lang('ui_main.reports_video'); ?></h4>
+					<h4><?php echo Kohana::lang('ui_main.external_video_link'); ?></h4>
 					<?php
 						$this_div = "divVideo";
 						$this_field = "incident_video";
@@ -263,6 +264,8 @@
 						print "<input type=\"hidden\" name=\"$this_startid\" value=\"$i\" id=\"$this_startid\">";
 					?>
 				</div>
+				
+				<?php Event::run('ushahidi_action.report_form_after_video_link'); ?>
 
 				<!-- Photo Fields -->
 				<div id="divPhoto" class="report_row">

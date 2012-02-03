@@ -10,7 +10,7 @@
 
 		<!-- right column -->
 		<div id="report-map-filter-box" class="clearingfix">
-	    <a class="btn toggle" id="filter-menu-toggle" class="" href="#the-filters">Filter Reports By <span class="btn-icon ic-right">&raquo;</span></a>
+	    <a class="btn toggle" id="filter-menu-toggle" class="" href="#the-filters"><?php echo Kohana::lang('ui_main.filter_reports_by'); ?><span class="btn-icon ic-right">&raquo;</span></a>
 	    
 	    <!-- filters box -->
 	    <div id="the-filters" class="map-menu-box">
@@ -28,9 +28,9 @@
     						$category_color = $category_info[1];
     						$category_image = '';
     						$color_css = 'class="swatch" style="background-color:#'.$category_color.'"';
-    						if($category_info[2] != NULL && file_exists(Kohana::config('upload.relative_directory').'/'.$category_info[2])) {
+    						if($category_info[2] != NULL) {
     							$category_image = html::image(array(
-    								'src'=>Kohana::config('upload.relative_directory').'/'.$category_info[2],
+    								'src'=>$category_info[2],
     								'style'=>'float:left;padding-right:5px;'
     								));
     							$color_css = '';
@@ -47,9 +47,9 @@
                                                                 $child_color = $child_info[1];
                                                                 $child_image = '';
                                                                 $color_css = 'class="swatch" style="background-color:#'.$child_color.'"';
-                                                                if($child_info[2] != NULL && file_exists(Kohana::config('upload.relative_directory').'/'.$child_info[2])) {
+                                                                if($child_info[2] != NULL) {
                                                                         $child_image = html::image(array(
-                                                                                'src'=>Kohana::config('upload.relative_directory').'/'.$child_info[2],
+                                                                                'src'=>$child_info[2],
                                                                                 'style'=>'float:left;padding-right:5px;'
                                                                                 ));
                                                                         $color_css = '';

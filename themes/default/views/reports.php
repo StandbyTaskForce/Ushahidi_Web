@@ -3,18 +3,17 @@
 		<!-- start reports block -->
 		<div class="big-block">
 			<h1 class="heading">
-				<?php $timeframe_title =  date('M d, Y', $oldest_timestamp).' through '.date('M d, Y', $latest_timestamp); ?>
-				Showing Reports from <span class="time-period">
-					<?php echo $timeframe_title; ?>
-					</span> 
-				<a href="#" class="btn-change-time ic-time">change date range</a>
+				<?php $timeframe_title = date('M d, Y', $oldest_timestamp).' '.Kohana::lang('ui_main.through').' '.date('M d, Y', $latest_timestamp); ?>
+				<?php echo Kohana::lang('ui_main.showing_reports_from'); ?> 
+				<span class="time-period"><?php echo $timeframe_title; ?></span> 
+				<a href="#" class="btn-change-time ic-time"><?php echo Kohana::lang('ui_main.change_date_range'); ?></a>
 			</h1>
 			
 			<div id="tooltip-box">
 				<div class="tt-arrow"></div>
 				<ul class="inline-links">
 					<li>
-						<a title="<?php echo $timeframe_title; ?>" class="btn-date-range active" id="dateRangeAll" href="#">
+						<a title="<?php echo Kohana::lang('ui_main.all_time'); ?>" class="btn-date-range active" id="dateRangeAll" href="#">
 							<?php echo Kohana::lang('ui_main.all_time')?>
 						</a>
 					</li>
@@ -35,7 +34,7 @@
 					</li>
 				</ul>
 				
-				<p class="labeled-divider"><span>Or choose your own date range:</span></p>
+				<p class="labeled-divider"><span><?php echo Kohana::lang('ui_main.choose_date_range'); ?>:</span></p>
 				<form>
 					<table>
 						<tr>
@@ -62,7 +61,7 @@
 				<!-- end #reports-box -->
 				
 				<div id="filters-box">
-					<h2>Filter Reports By</h2>
+					<h2><?php echo Kohana::lang('ui_main.filter_reports_by'); ?></h2>
 					<div id="accordion">
 						
 						<h3>
@@ -187,13 +186,17 @@
 								<?php echo $custom_forms_filter; ?>
 							</ul>
 						</div>
+						<?php
+							// Action, allows plugins to add custom filters
+							Event::run('ushahidi_action.report_filters_ui');
+						?>
 					</div>
 					<!-- end #accordion -->
 					
 					<div id="filter-controls">
 						<p>
 							<a href="#" class="small-link-button reset" id="reset_all_filters"><?php echo Kohana::lang('ui_main.reset_all_filters'); ?></a> 
-							<a href="#" id="applyFilters" class="filter-button">Filter Reports</a>
+							<a href="#" id="applyFilters" class="filter-button"><?php echo Kohana::lang('ui_main.filter_reports'); ?></a>
 						</p>
 					</div>          
 				</div>

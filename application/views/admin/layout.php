@@ -18,6 +18,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=7" />
+	<?php echo Kohana::config("globalcode.head"); ?>
 	<title><?php echo $site_name ?></title>
 	<?php
 	echo html::stylesheet(url::file_loc('css').'media/css/admin/all', '', true);
@@ -188,8 +189,11 @@
 					<li class="none-separator"><a href="<?php echo url::site()."admin/profile/" ?>"><?php echo Kohana::lang('ui_admin.my_profile');?></a></li>
 					<li><a href="<?php echo url::site();?>logout"><?php echo Kohana::lang('ui_admin.logout');?></a></li>
 				</ul>
-                        </div>
-
+			</div>
+			<?php
+				// Action::admin_secondary_header_bar - Admin Secondary Menu
+				Event::run('ushahidi_action.admin_secondary_header_bar');
+			?>
 
 			<!-- info-nav -->
 			<div class="info-nav">

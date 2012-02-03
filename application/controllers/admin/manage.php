@@ -147,26 +147,50 @@ class Manage_Controller extends Admin_Controller
 					if ($filename)
 					{
 						$new_filename = "category_".$category->id."_".time();
+						
+						// Name the files for the DB
+						$cat_img_file = $new_filename.".png";
+						$cat_img_thumb_file = $new_filename."_16x16.png";
 
 						// Resize Image to 32px if greater
 						Image::factory($filename)->resize(32,32,Image::HEIGHT)
-							->save(Kohana::config('upload.directory', TRUE) . $new_filename.".png");
+							->save(Kohana::config('upload.directory', TRUE) . $cat_img_file);
 						// Create a 16x16 version too
 						Image::factory($filename)->resize(16,16,Image::HEIGHT)
-							->save(Kohana::config('upload.directory', TRUE) . $new_filename."_16x16.png");
+							->save(Kohana::config('upload.directory', TRUE) . $cat_img_thumb_file);
+							
+						// Okay, now we have these three different files on the server, now check to see
+						//   if we should be dropping them on the CDN
+						
+						if(Kohana::config("cdn.cdn_store_dynamic_content"))
+						{
+							$cat_img_file = cdn::upload($cat_img_file);
+							$cat_img_thumb_file = cdn::upload($cat_img_thumb_file);
+							
+							// We no longer need the files we created on the server. Remove them.
+							$local_directory = rtrim(Kohana::config('upload.directory', TRUE), '/').'/';
+							unlink($local_directory.$new_filename.".png");
+							unlink($local_directory.$new_filename."_16x16.png");
+						}
 
 						// Remove the temporary file
 						unlink($filename);
 
 						// Delete Old Image
 						$category_old_image = $category->category_image;
-						if ( ! empty($category_old_image)
-							AND file_exists(Kohana::config('upload.directory', TRUE).$category_old_image))
-							unlink(Kohana::config('upload.directory', TRUE).$category_old_image);
+						if ( ! empty($category_old_image))
+						{
+							if(file_exists(Kohana::config('upload.directory', TRUE).$category_old_image))
+							{
+								unlink(Kohana::config('upload.directory', TRUE).$category_old_image);
+							}elseif(Kohana::config("cdn.cdn_store_dynamic_content") AND valid::url($category_old_image)){
+								cdn::delete($category_old_image);
+							}
+						}
 
 						// Save
-						$category->category_image = $new_filename.".png";
-						$category->category_image_thumb = $new_filename."_16x16.png";
+						$category->category_image = $cat_img_file;
+						$category->category_image_thumb = $cat_img_thumb_file;
 						$category->save();
 					}
 
@@ -713,6 +737,8 @@ class Manage_Controller extends Admin_Controller
 						$path_parts = pathinfo($path_info);
 						$file_name = $path_parts['filename'];
 						$file_ext = $path_parts['extension'];
+						$layer_file = $file_name.".".$file_ext;
+						$layer_url = '';
 
 						if (strtolower($file_ext) == "kmz")
 						{ 
@@ -723,21 +749,43 @@ class Manage_Controller extends Admin_Controller
 								foreach ($archive_files as $file)
 								{
 									$ext_file_name = $file['filename'];
+									$archive_file_parts = pathinfo($ext_file_name);
+									//because there can be more than one file in a KMZ
+									if ($archive_file_parts['extension'] == 'kml' AND $ext_file_name AND $archive->extract(PCLZIP_OPT_PATH, Kohana::config('upload.directory')) == TRUE)
+									{ 
+										// Okay, so we have an extracted KML - Rename it and delete KMZ file
+										rename($path_parts['dirname']."/".$ext_file_name, 
+											$path_parts['dirname']."/".$file_name.".kml");
+			
+										$file_ext = "kml";
+										unlink($path_info);
+										$layer_file = $file_name.".".$file_ext;
+									}
+									
 								}
 							}
 
-							if ($ext_file_name AND $archive->extract(PCLZIP_OPT_PATH, Kohana::config('upload.directory')) == TRUE)
-							{ 
-								// Okay, so we have an extracted KML - Rename it and delete KMZ file
-								rename($path_parts['dirname']."/".$ext_file_name, 
-									$path_parts['dirname']."/".$file_name.".kml");
-
-								$file_ext = "kml";
-								unlink($path_info);
-							}
+							
 						}
 
-						$layer->layer_file = $file_name.".".$file_ext;
+						
+						// Upload the KML to the CDN server if configured
+						if (Kohana::config("cdn.cdn_store_dynamic_content"))
+						{
+							// Upload the file to the CDN
+							$layer_url = cdn::upload($layer_file);
+
+							// We no longer need the files we created on the server. Remove them.
+							$local_directory = rtrim(Kohana::config('upload.directory', TRUE), '/').'/';
+							unlink($local_directory.$layer_file);
+
+							// We no longer need to store the file name for the local file since it's gone
+							$layer_file = '';
+						}
+
+						// Set the final variables for the DB
+						$layer->layer_url = $layer_url;
+						$layer->layer_file = $layer_file;
 						$layer->save();
 					}
 					

@@ -75,7 +75,7 @@ class Main_Controller extends Template_Controller {
 			}
 		}
 		
-        // Load cache
+		// Load cache
 		$this->cache = new Cache;
 
         // Load Header & Footer
@@ -96,10 +96,13 @@ class Main_Controller extends Template_Controller {
 		$site_name = Kohana::config('settings.site_name');
 		
 		// Get banner image and pass to the header
-		if(Kohana::config('settings.site_banner_id') != NULL){
+		if (Kohana::config('settings.site_banner_id') != NULL)
+		{
 			$banner = ORM::factory('media')->find(Kohana::config('settings.site_banner_id'));
-			$this->template->header->banner = $banner->media_link;
-		}else{
+			$this->template->header->banner = url::convert_uploaded_to_abs($banner->media_link);
+		}
+		else
+		{
 			$this->template->header->banner = NULL;
 		}
 		
@@ -141,14 +144,21 @@ class Main_Controller extends Template_Controller {
 			? Stats_Model::get_javascript()
 			: '';
 		
+		// Enable CDN gradual upgrader
+		$this->template->footer->cdn_gradual_upgrade = (Kohana::config('cdn.cdn_gradual_upgrade') != false)
+			? cdn::cdn_gradual_upgrade_js()
+			: '';
+		
 		// add copyright info
 		$this->template->footer->site_copyright_statement = '';
 		$site_copyright_statement = trim(Kohana::config('settings.site_copyright_statement'));
-		if($site_copyright_statement != '')
+		if ($site_copyright_statement != '')
 		{
 			$this->template->footer->site_copyright_statement = $site_copyright_statement;
 		}
 		
+		// Display news feeds?
+		$this->template->header->allow_feed = Kohana::config('settings.allow_feed');
 	}
 
 	/**
@@ -209,10 +219,6 @@ class Main_Controller extends Template_Controller {
 		// Get locale
 		$l = Kohana::config('locale.language.0');
 
-		// Display news feeds?
-		$this->template->content->allow_feed = Kohana::config('settings.allow_feed');
-
-
         // Get all active top level categories
 		$parent_categories = array();
 		foreach (ORM::factory('category')
@@ -230,11 +236,12 @@ class Main_Controller extends Template_Controller {
 				{
 					// Check for localization of child category
 					$display_title = Category_Lang_Model::category_title($child->id,$l);
-
+					
+					$ca_img = ($child->category_image != NULL) ? url::convert_uploaded_to_abs($child->category_image) : NULL;
 					$children[$child->id] = array(
 						$display_title,
 						$child->category_color,
-						$child->category_image
+						$ca_img
 					);
 
 					if ($child->category_trusted)
@@ -253,10 +260,11 @@ class Main_Controller extends Template_Controller {
 			$display_title = Category_Lang_Model::category_title($category->id,$l);
 
 			// Put it all together
+			$ca_img = ($category->category_image != NULL) ? url::convert_uploaded_to_abs($category->category_image) : NULL;
 			$parent_categories[$category->id] = array(
 				$display_title,
 				$category->category_color,
-				$category->category_image,
+				$ca_img,
 				$children
 			);
 
@@ -498,6 +506,16 @@ class Main_Controller extends Template_Controller {
 
 		// Rebuild Header Block
 		$this->template->header->header_block = $this->themes->header_block();
+	}
+	
+	public function cdn_gradual_upgrade()
+	{
+		$this->auto_render = FALSE;
+		$this->template = "";
+		if (Kohana::config('cdn.cdn_gradual_upgrade') != FALSE)
+		{
+			cdn::gradual_upgrade();
+		}
 	}
 
 } // End Main
