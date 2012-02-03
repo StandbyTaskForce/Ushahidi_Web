@@ -2494,3 +2494,7 @@ a.filter-button:hover { text-decoration:none; background:#707070;  }
     border: 0;
     text-decoration: none;
 }
+
+span.required {
+  color: #CC1830;
+}
