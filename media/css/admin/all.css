@@ -927,6 +927,11 @@ div.custom_div h2 {
 	line-height:12px;
 	color:#a1a1a1;
 }
+.report-form h4 span.required {
+	font-weight:normal;
+	font-size:100%;
+	color:#CC1830;
+}
 div.experimental{
 	float:left;
 	padding-left:20px;
