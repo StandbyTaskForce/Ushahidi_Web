@@ -275,7 +275,7 @@ class Reports_Controller extends Main_Controller {
 			'incident_news' => array(),
 			'incident_video' => array(),
 			'incident_photo' => array(),
-			'incident_zoom' => intval(Kohana::config('settings.default_zoom')),
+      'incident_zoom' => '',
 			'person_first' => '',
 			'person_last' => '',
 			'person_email' => '',
@@ -295,6 +295,7 @@ class Reports_Controller extends Main_Controller {
 		$form['incident_minute'] = date('i');
 		$form['incident_ampm'] = date('a');
 		$form['country_id'] = Kohana::config('settings.default_country');
+    $form['incident_zoom'] = intval(Kohana::config('settings.default_zoom'));
 		
 		// Initialize Default Value for Hidden Field Country Name, just incase Reverse Geo coding yields no result
 		$country_name = ORM::factory('country',$form['country_id']);
