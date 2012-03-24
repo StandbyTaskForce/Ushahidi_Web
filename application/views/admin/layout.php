@@ -1,16 +1,16 @@
-<?php 
+<?php
 /**
  * Layout for the admin interface.
  *
  * PHP version 5
- * LICENSE: This source file is subject to LGPL license 
+ * LICENSE: This source file is subject to LGPL license
  * that is available through the world-wide-web at the following URI:
  * http://www.gnu.org/copyleft/lesser.html
- * @author     Ushahidi Team <team@ushahidi.com> 
+ * @author     Ushahidi Team <team@ushahidi.com>
  * @package    Ushahidi - http://source.ushahididev.com
  * @module     API Controller
  * @copyright  Ushahidi - http://www.ushahidi.com
- * @license    http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License (LGPL) 
+ * @license    http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License (LGPL)
  */
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -18,7 +18,6 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=7" />
-	<?php echo Kohana::config("globalcode.head"); ?>
 	<title><?php echo $site_name ?></title>
 	<?php
 	echo html::stylesheet(url::file_loc('css').'media/css/admin/all', '', true);
@@ -26,7 +25,7 @@
 	echo "<!--[if lt IE 7]>".
 		html::stylesheet(url::file_loc('css').'media/css/ie6', '', true)
 		."<![endif]-->";
-	
+
 	// Load OpenLayers
 	if ($map_enabled)
 	{
@@ -37,7 +36,7 @@
 			</script>";
 		echo html::stylesheet(url::file_loc('css').'media/css/openlayers','',true);
 	}
-	
+
 	// Load jQuery
 	echo html::script(url::file_loc('js').'media/js/jquery', true);
 	echo html::script(url::file_loc('js').'media/js/jquery.form', true);
@@ -57,7 +56,7 @@
 		Date.firstDayOfWeek = 1;
 		Date.format = 'mm/dd/yyyy';
 		</script>
-		
+
 		<?php
 		echo html::script(url::file_loc('js').'media/js/jquery.datePicker', true);
 		echo '<!--[if IE]>'.
@@ -65,14 +64,14 @@
 			.'<![endif]-->';
 	}
 	echo html::stylesheet(url::file_loc('css').'media/css/jquery.hovertip-1.0', '', true);
-	
+
 	echo "<script type=\"text/javascript\">
 		$(function() {
 			if($('.tooltip[title]') != null)
 			$('.tooltip[title]').hovertip();
 		});
 	</script>";
-	
+
 	// Load Flot
 	if ($flot_enabled)
 	{
@@ -80,13 +79,13 @@
 		echo html::script(url::file_loc('js').'media/js/excanvas.min', true);
 		echo html::script(url::file_loc('js').'media/js/timeline.js', true);
 	}
-	
+
 	// Load TreeView
 	if ($treeview_enabled) {
 		echo html::script(url::file_loc('js').'media/js/jquery.treeview');
 		echo html::stylesheet(url::file_loc('css').'media/css/jquery.treeview');
 	}
-	
+
 	// Load ProtoChart
 	if ($protochart_enabled)
 	{
@@ -97,7 +96,7 @@
 		echo '<![endif]-->';
 		echo html::script(url::file_loc('js').'media/js/protochart/ProtoChart', true);
 	}
-	
+
 	// Load Raphael
 	if($raphael_enabled)
 	{
@@ -109,36 +108,47 @@
 		echo '</script>';
 		echo html::script(url::file_loc('js').'media/js/raphael-ushahidi-impact', true);
 	}
-	
+
 	// Load ColorPicker
 	if ($colorpicker_enabled)
 	{
 		echo html::stylesheet(url::file_loc('css').'media/css/colorpicker', '', true);
 		echo html::script(url::file_loc('js').'media/js/colorpicker', true);
 	}
-	
-	// Load TinyMCE
+
+	// Load jwysiwyg
 	if ($editor_enabled)
 	{
-		echo html::script(url::file_loc('js').'media/js/tinymce/tiny_mce', true);
+		if (Kohana::config("cdn.cdn_ignore_jwysiwyg") == true) {
+			echo html::script(url::file_loc('ignore').'media/js/jwysiwyg/jwysiwyg/jquery.wysiwyg.js', true);
+		} else {
+			echo html::script(url::file_loc('js').'media/js/jwysiwyg/jwysiwyg/jquery.wysiwyg.js', true);
+		}
 	}
-	
+
 	// Table Row Sort
 	if ($tablerowsort_enabled)
 	{
 		echo html::script(url::file_loc('js').'media/js/jquery.tablednd_0_5', true);
 	}
-	
+
 	// JSON2 for IE+
 	if ($json2_enabled)
 	{
 		echo html::script(url::file_loc('js').'media/js/json2', true);
 	}
-	
+
 	// Turn on picbox
 	echo html::script(url::file_loc('js').'media/js/picbox', true);
 	echo html::stylesheet(url::file_loc('css').'media/css/picbox/picbox');
-	
+
+	//Turn on jwysiwyg
+	echo html::stylesheet(url::file_loc('css').'media/js/jwysiwyg/jwysiwyg/jquery.wysiwyg.css');
+
+	// Header Nav
+	echo html::script(url::file_loc('js').'media/js/global', true);
+	echo html::stylesheet(url::file_loc('css').'media/css/global','',true);
+
 	// Render CSS and Javascript Files from Plugins
 	echo plugin::render('stylesheet');
 	echo plugin::render('javascript');
@@ -159,7 +169,7 @@
 				 .val('')
 				 .removeAttr('checked')
 				 .removeAttr('selected');
-				
+
 			}else{
 				$("#addedit").show(400);
 			}
@@ -171,29 +181,24 @@
 		}
 		?>
 	</script>
+
+	<?php echo $header_block; ?>
 </head>
 <body>
+
+	<?php
+		echo $header_nav;
+
+		// Action::admin_header_top_left - Admin Header Menu
+		Event::run('ushahidi_action.admin_header_top_left');
+
+		// Action::admin_secondary_header_bar - Admin Secondary Menu
+		Event::run('ushahidi_action.admin_secondary_header_bar');
+	?>
+
 	<div class="holder">
 		<!-- header -->
 		<div id="header">
-			<!-- top-area -->
-			<div class="top">
-				<?php
-				// Action::admin_header_top_left - Admin Header Menu
-				Event::run('ushahidi_action.admin_header_top_left');
-				?>
-				<ul>
-					<li class="none-separator"> <?php echo Kohana::lang('ui_admin.welcome');echo $admin_name; ?>!</li>
-					<li class="none-separator"><a href="<?php echo url::site() ?>" title="View the home page">
-						<?php echo Kohana::lang('ui_admin.view_site');?></a>					
-					<li class="none-separator"><a href="<?php echo url::site()."admin/profile/" ?>"><?php echo Kohana::lang('ui_admin.my_profile');?></a></li>
-					<li><a href="<?php echo url::site();?>logout"><?php echo Kohana::lang('ui_admin.logout');?></a></li>
-				</ul>
-			</div>
-			<?php
-				// Action::admin_secondary_header_bar - Admin Secondary Menu
-				Event::run('ushahidi_action.admin_secondary_header_bar');
-			?>
 
 			<!-- info-nav -->
 			<div class="info-nav">
@@ -206,8 +211,7 @@
 				<div class="info-search"><form action="<?php echo url::site() ?>admin/reports" id="info-search"><input type="text" name="k" class="info-keyword" value=""> <a href="javascript:info_search();" class="btn"><?php echo Kohana::lang('ui_admin.search');?></a></form></div>
 				<div style="clear:both;"></div>
 				<div class="info-buttons"><a class="button" href="<?php echo url::site().'admin/manage/publiclisting'; ?>">Manage Your <?php echo Kohana::lang('ui_admin.public_listing'); ?></a></div>
-				
-				
+
 			</div>
 			<!-- title -->
 			<h1><?php echo $site_name ?></h1>
@@ -243,5 +247,6 @@
 			</strong>
 		</div>
 	</div>
+<?php echo $footer_block; ?>
 </body>
 </html>

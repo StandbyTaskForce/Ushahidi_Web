@@ -22,10 +22,12 @@
 					<!-- tabset -->
 					<ul class="tabset">
 						<li>
-							<a href="?status=0" <?php if ($status != 'a' AND $status !='v') echo "class=\"active\""; ?>><?php echo Kohana::lang('ui_main.show_all');?></a>
+							<a href="?status=0" <?php if ($status != 'a' AND $status !='v' AND $status != 'o') echo "class=\"active\""; ?>><?php echo Kohana::lang('ui_main.show_all');?></a>
 						</li>
 						<li><a href="?status=a" <?php if ($status == 'a') echo "class=\"active\""; ?>><?php echo Kohana::lang('ui_main.awaiting_approval');?></a></li>
 						<li><a href="?status=v" <?php if ($status == 'v') echo "class=\"active\""; ?>><?php echo Kohana::lang('ui_main.awaiting_verification');?></a></li>
+						<li><a href="?status=o" <?php if ($status == 'o') echo "class=\"active\""; ?>><?php echo
+Kohana::lang('ui_main.orphaned_reports'); ?></a></li>
 					</ul>
 					<!-- tab -->
 					<div class="tab">
@@ -155,7 +157,7 @@
 									$incident_category = "";
 									foreach($incident_orm->incident_category as $category)
 									{
-										$incident_category .= "<a href=\"#\">" . $category->category->category_title . "</a>&nbsp;&nbsp;";
+										$incident_category .= $category->category->category_title ."&nbsp;&nbsp;";
 									}
 
 									// Incident Status
@@ -218,7 +220,9 @@
 												</li>
 											</ul>
 											<ul class="links">
-												<li class="none-separator"><?php echo Kohana::lang('ui_main.categories');?>:<?php echo $incident_category; ?></li>
+												<li class="none-separator"><?php echo Kohana::lang('ui_main.categories');?>:
+													<strong><?php echo $incident_category;?></strong>
+												</li>
 											</ul>
 											<?php
 											echo $edit_log;
@@ -249,4 +253,22 @@
 						</table>
 					</div>
 				<?php print form::close(); ?>
+				<div class="tabs">
+					<div class="tab">
+						<ul>
+						<li><a href="#" onclick="reportAction('a','<?php echo strtoupper(Kohana::lang('ui_main.approve')); ?>', '');">
+							<?php echo Kohana::lang('ui_main.approve');?></a>
+						</li>
+						<li><a href="#" onclick="reportAction('u','<?php echo strtoupper(Kohana::lang('ui_main.disapprove')); ?>', '');">
+							<?php echo Kohana::lang('ui_main.disapprove');?></a>
+						</li>
+						<li><a href="#" onclick="reportAction('v','<?php echo strtoupper(Kohana::lang('ui_admin.verify_unverify')); ?>', '');">
+							<?php echo Kohana::lang('ui_admin.verify_unverify');?></a>
+						</li>
+						<li><a href="#" onclick="reportAction('d','<?php echo strtoupper(Kohana::lang('ui_main.delete')); ?>', '');">
+							<?php echo Kohana::lang('ui_main.delete');?></a>
+						</li>
+						</ul>
+					</div>
+				</div>
 			</div>

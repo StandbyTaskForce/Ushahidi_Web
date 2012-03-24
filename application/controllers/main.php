@@ -17,64 +17,64 @@ class Main_Controller extends Template_Controller {
 	 * @var bool
 	 */
 	public $auto_render = TRUE;
-	
+
 	/**
 	 * Name of the template view
 	 * @var string
 	 */
 	public $template = 'layout';
-	
+
 	/**
 	 * Cache object - to be used for caching content
 	 * @var Cache
 	 */
 	protected $cache;
-	
+
 	/**
 	 * Whether the current controller is cacheable - defaults to FALSE
 	 * @var bool
 	 */
 	public $is_cachable = FALSE;
-	
+
 	/**
 	 * Session object
 	 * @var Session
 	 */
 	protected $session;
-	
+
 	/**
 	 * Prefix for the database tables
 	 * @var string
 	 */
 	protected $table_prefix;
-	
+
 	/**
 	 * Themes helper library object
 	 * @var Themes
 	 */
 	protected $themes;
-	
+
 	// User Object
 	protected $user;
 
 	public function __construct()
 	{
 		parent::__construct();
-		
+
 		$this->auth = new Auth();
 		$this->auth->auto_login();
-		
+
 		// Load Session
 		$this->session = Session::instance();
-		
+
 		if(Kohana::config('settings.private_deployment'))
 		{
 			if ( ! $this->auth->logged_in('login'))
 			{
-				url::redirect('login/front');
+				url::redirect('login');
 			}
 		}
-		
+
 		// Load cache
 		$this->cache = new Cache;
 
@@ -94,7 +94,7 @@ class Main_Controller extends Template_Controller {
 
 		// Retrieve Default Settings
 		$site_name = Kohana::config('settings.site_name');
-		
+
 		// Get banner image and pass to the header
 		if (Kohana::config('settings.site_banner_id') != NULL)
 		{
@@ -105,24 +105,13 @@ class Main_Controller extends Template_Controller {
 		{
 			$this->template->header->banner = NULL;
 		}
-		
+
 		// Prevent Site Name From Breaking up if its too long
 		// by reducing the size of the font
 		$site_name_style = (strlen($site_name) > 20) ? " style=\"font-size:21px;\"" : "";
-			
+
 		$this->template->header->private_deployment = Kohana::config('settings.private_deployment');
-		$this->template->header->loggedin_username = FALSE;
-		$this->template->header->loggedin_userid = FALSE;
-		
-		if ( isset(Auth::instance()->get_user()->username) AND isset(Auth::instance()->get_user()->id) )
-		{
-			// Load User
-			$this->user = Auth::instance()->get_user();
-			$this->template->header->loggedin_username = html::specialchars(Auth::instance()->get_user()->username);
-			$this->template->header->loggedin_userid = Auth::instance()->get_user()->id;
-			$this->template->header->loggedin_role = ( Auth::instance()->logged_in('member') ) ? "members" : "admin";
-		}
-		
+
 		$this->template->header->site_name = $site_name;
 		$this->template->header->site_name_style = $site_name_style;
 		$this->template->header->site_tagline = Kohana::config('settings.site_tagline');
@@ -132,23 +121,6 @@ class Main_Controller extends Template_Controller {
 
 		$this->template->header->this_page = "";
 
-		// Google Analytics
-		$google_analytics = Kohana::config('settings.google_analytics');
-		$this->template->footer->google_analytics = $this->themes->google_analytics($google_analytics);
-
-        // Load profiler
-        // $profiler = new Profiler;
-
-		// Get tracking javascript for stats
-		$this->template->footer->ushahidi_stats = (Kohana::config('settings.allow_stat_sharing') == 1)
-			? Stats_Model::get_javascript()
-			: '';
-		
-		// Enable CDN gradual upgrader
-		$this->template->footer->cdn_gradual_upgrade = (Kohana::config('cdn.cdn_gradual_upgrade') != false)
-			? cdn::cdn_gradual_upgrade_js()
-			: '';
-		
 		// add copyright info
 		$this->template->footer->site_copyright_statement = '';
 		$site_copyright_statement = trim(Kohana::config('settings.site_copyright_statement'));
@@ -156,9 +128,25 @@ class Main_Controller extends Template_Controller {
 		{
 			$this->template->footer->site_copyright_statement = $site_copyright_statement;
 		}
-		
+
 		// Display news feeds?
 		$this->template->header->allow_feed = Kohana::config('settings.allow_feed');
+
+		// Header Nav
+		$header_nav = new View('header_nav');
+		$this->template->header->header_nav = $header_nav;
+		$this->template->header->header_nav->loggedin_user = FALSE;
+		if ( isset(Auth::instance()->get_user()->id) )
+		{
+			// Load User
+			$this->template->header->header_nav->loggedin_role = ( Auth::instance()->logged_in('member') ) ? "members" : "admin";
+			$this->template->header->header_nav->loggedin_user = Auth::instance()->get_user();
+		}
+		$this->template->header->header_nav->site_name = Kohana::config('settings.site_name');
+
+        // Load profiler
+        //$this->profiler = new Profiler;
+
 	}
 
 	/**
@@ -170,6 +158,7 @@ class Main_Controller extends Template_Controller {
 	    ->where('category_visible', '1')
 	    ->where('parent_id', '0')
 	    ->where('category_trusted != 1')
+	    ->orderby('category_position', 'ASC')
 	    ->orderby('category_title', 'ASC')
 	    ->find_all();
 
@@ -185,8 +174,8 @@ class Main_Controller extends Template_Controller {
 						->join("incident_category","incident.id","incident_category.incident_id")
 						->where("category_id",$id);
 		return $trusted;
-	} 
-	 
+	}
+
     public function index()
     {
         $this->template->header->this_page = 'home';
@@ -198,13 +187,13 @@ class Main_Controller extends Template_Controller {
 		// Map and Slider Blocks
 		$div_map = new View('main_map');
 		$div_timeline = new View('main_timeline');
-		
+
 		// Filter::map_main - Modify Main Map Block
 		Event::run('ushahidi_filter.map_main', $div_map);
-		
+
 		// Filter::map_timeline - Modify Main Map Block
 		Event::run('ushahidi_filter.map_timeline', $div_timeline);
-		
+
 		$this->template->content->div_map = $div_map;
 		$this->template->content->div_timeline = $div_timeline;
 
@@ -223,36 +212,26 @@ class Main_Controller extends Template_Controller {
 		$parent_categories = array();
 		foreach (ORM::factory('category')
 				->where('category_visible', '1')
+				->where('id != 5')
 				->where('parent_id', '0')
-				->orderby('category_position', 'asc')
 				->find_all() as $category)
 		{
 			// Get The Children
 			$children = array();
-			foreach ($category->orderby('category_position', 'asc')->children as $child)
+			foreach ($category->children as $child)
 			{
 				$child_visible = $child->category_visible;
 				if ($child_visible)
 				{
 					// Check for localization of child category
 					$display_title = Category_Lang_Model::category_title($child->id,$l);
-					
+
 					$ca_img = ($child->category_image != NULL) ? url::convert_uploaded_to_abs($child->category_image) : NULL;
 					$children[$child->id] = array(
 						$display_title,
 						$child->category_color,
 						$ca_img
 					);
-
-					if ($child->category_trusted)
-					{ 
-						// Get Trusted Category Count
-						$trusted = $this->get_trusted_category_count($child->id);
-						if ( ! $trusted->count_all())
-						{
-							unset($children[$child->id]);
-						}
-					}
 				}
 			}
 
@@ -267,16 +246,6 @@ class Main_Controller extends Template_Controller {
 				$ca_img,
 				$children
 			);
-
-			if ($category->category_trusted)
-			{ 
-				// Get Trusted Category Count
-				$trusted = $this->get_trusted_category_count($category->id);
-				if ( ! $trusted->count_all())
-				{
-					unset($parent_categories[$category->id]);
-				}
-			}
 		}
 		$this->template->content->categories = $parent_categories;
 
@@ -297,16 +266,6 @@ class Main_Controller extends Template_Controller {
 			$layers = $config_layers;
 		}
 		$this->template->content->layers = $layers;
-
-		// Get all active Shares
-		$shares = array();
-		foreach (ORM::factory('sharing')
-				  ->where('sharing_active', 1)
-				  ->find_all() as $share)
-		{
-			$shares[$share->id] = array($share->sharing_name, $share->sharing_color);
-		}
-		$this->template->content->shares = $shares;
 
 		// Get Default Color
 		$this->template->content->default_map_all = Kohana::config('settings.default_map_all');
@@ -336,6 +295,11 @@ class Main_Controller extends Template_Controller {
 			$phone_array[] = $sms_no3;
 		}
 		$this->template->content->phone_array = $phone_array;
+
+		// Get external apps
+		$external_apps = array();
+		$external_apps = ORM::factory('externalapp')->find_all();
+		$this->template->content->external_apps = $external_apps;
 
         // Get The START, END and Incident Dates
         $startDate = "";
@@ -439,7 +403,7 @@ class Main_Controller extends Template_Controller {
 		Event::run('ushahidi_filter.active_endDate', $display_endDate);
 		Event::run('ushahidi_filter.startDate', $startDate);
 		Event::run('ushahidi_filter.endDate', $endDate);
-		
+
 		$this->template->content->div_timeline->startDate = $startDate;
 		$this->template->content->div_timeline->endDate = $endDate;
 
@@ -498,24 +462,15 @@ class Main_Controller extends Template_Controller {
 
 		$this->themes->js->active_startDate = $display_startDate;
 		$this->themes->js->active_endDate = $display_endDate;
-		
+
 		$this->themes->js->blocks_per_row = Kohana::config('settings.blocks_per_row');
 
 		//$myPacker = new javascriptpacker($js , 'Normal', false, false);
 		//$js = $myPacker->pack();
 
-		// Rebuild Header Block
+		// Build Header and Footer Blocks
 		$this->template->header->header_block = $this->themes->header_block();
-	}
-	
-	public function cdn_gradual_upgrade()
-	{
-		$this->auto_render = FALSE;
-		$this->template = "";
-		if (Kohana::config('cdn.cdn_gradual_upgrade') != FALSE)
-		{
-			cdn::gradual_upgrade();
-		}
+		$this->template->footer->footer_block = $this->themes->footer_block();
 	}
 
 } // End Main

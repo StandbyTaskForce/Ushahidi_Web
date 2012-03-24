@@ -224,7 +224,11 @@
 												
 												<?php if($category_trusted == 1) { ?>
 												<div class="right">
+													<?php if($category_title == 'Trusted Reports') { ?>
 													<a href="#" class="tooltip" title="<?php echo htmlentities(Kohana::lang('ui_admin.special_category_explanation'),ENT_QUOTES);?>"><strong><?php echo Kohana::lang('ui_admin.special_category');?></strong></a>
+													<?php } else {?>
+														<a href="#" class="tooltip" title="<?php echo htmlentities(Kohana::lang('ui_admin.orphaned_category_explanation'),ENT_QUOTES); ?>"><strong><?php echo Kohana::lang('ui_admin.special_category');?></strong></a>
+													<?php } ?>
 												</div>
 												<?php } ?>
 												
@@ -233,7 +237,7 @@
 										<?php
 										
 										// Get All Category Children
-										foreach ( $category->orderby('category_position', 'asc')->children as $child)
+										foreach ( $category->children as $child)
 										{
 											$category_id = $child->id;
 											$parent_id = $child->parent_id;

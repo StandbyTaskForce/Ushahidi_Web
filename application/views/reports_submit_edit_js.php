@@ -324,12 +324,18 @@
 			/* Form Actions */
 			// Action on Save Only
 			$('.btn_save').live('click', function () {
-				$("#save").attr("value", "1");
+				$("#save").attr("value", "dontclose");
 				$(this).parents("form").submit();
 				return false;
 			});
 			
 			$('.btn_save_close').live('click', function () {
+				$(this).parents("form").submit();
+				return false;
+			});
+
+			$('.btn_save_add_new').live('click', function () {
+				$("#save").attr("value", "addnew");
 				$(this).parents("form").submit();
 				return false;
 			});
@@ -673,7 +679,7 @@
 					function(data){
 						if (data.status == 'success'){
 							$('#custom_forms').html('');
-							$('#custom_forms').html(unescape(data.response));
+							$('#custom_forms').html(decodeURIComponent(data.response));
 							$('#form_loader').html('');
 						}
 				  	}, "json");
