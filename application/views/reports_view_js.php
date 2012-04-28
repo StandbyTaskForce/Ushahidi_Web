@@ -15,6 +15,8 @@
  * @license    http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License (LGPL) 
  */
 ?>
+    <?php @require_once(APPPATH.'views/map_common_js.php'); ?>
+
 		var map, markers;
 		var myPoint;
 		var selectedFeature;
@@ -32,7 +34,9 @@
 				numZoomLevels: 18,
 				controls:[],
 				projection: proj_900913,
-				'displayProjection': proj_4326
+				'displayProjection': proj_4326,
+				maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
+				maxResolution: 156543.0339
 				};
 			map = new OpenLayers.Map('map', options);
 			map.addControl( new OpenLayers.Control.LoadingPanel({minSize: new OpenLayers.Size(573, 366)}) );
@@ -138,20 +142,7 @@
 			
 			map.addLayer(markers);
 			
-			selectCtrl = new OpenLayers.Control.SelectFeature(markers, {
-				onSelect: onFeatureSelect, 
-				onUnselect: onFeatureUnselect
-			});
-			highlightCtrl = new OpenLayers.Control.SelectFeature(markers, {
-			    hover: true,
-			    highlightOnly: true,
-			    renderIntent: "temporary"
-			});		
-
-			map.addControl(selectCtrl);
-			map.addControl(highlightCtrl);
-			selectCtrl.activate();
-			//highlightCtrl.activate();
+      addFeatureSelectionEvents(map, markers);
 
 			// create a lat/lon object
 			myPoint = new OpenLayers.LonLat(<?php echo $longitude; ?>, <?php echo $latitude; ?>);
@@ -243,51 +234,7 @@
 				return false;
 			});
 		});
-		
-		function onPopupClose(evt) {
-            selectCtrl.unselect(selectedFeature);
-			selectedFeature = '';
-        }
 
-        function onFeatureSelect(feature) {
-            selectedFeature = feature;
-			// Lon/Lat Spherical Mercator
-			zoom_point = feature.geometry.getBounds().getCenterLonLat();
-			lon = zoom_point.lon;
-			lat = zoom_point.lat;
-            var content = "<div class=\"infowindow\"><div class=\"infowindow_list\">"+feature.attributes.name + "</div>";
-			content = content + "\n<div class=\"infowindow_meta\"><a href='javascript:zoomToSelectedFeature("+ lon + ","+ lat +", 1)'>Zoom&nbsp;In</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href='javascript:zoomToSelectedFeature("+ lon + ","+ lat +", -1)'>Zoom&nbsp;Out</a></div>";
-			content = content + "</div>";
-			// Since KML is user-generated, do naive protection against
-            // Javascript.
-            if (content.search("<script") != -1) {
-                content = "Content contained Javascript! Escaped content below.<br />" + content.replace(/</g, "&lt;");
-            }
-            popup = new OpenLayers.Popup.FramedCloud("chicken", 
-                                     feature.geometry.getBounds().getCenterLonLat(),
-                                     new OpenLayers.Size(100,100),
-                                     content,
-                                     null, true, onPopupClose);
-            feature.popup = popup;
-            map.addPopup(popup);
-        }
-
-        function onFeatureUnselect(feature) {
-            map.removePopup(feature.popup);
-            feature.popup.destroy();
-            feature.popup = null;
-        }
-		
-		function zoomToSelectedFeature(lon, lat, zoomfactor){
-			var lonlat = new OpenLayers.LonLat(lon,lat);
-			map.panTo(lonlat);
-			// Get Current Zoom
-			currZoom = map.getZoom();
-			// New Zoom
-			newZoom = currZoom + zoomfactor;
-			map.zoomTo(newZoom);
-		}
-		
 		jQuery(window).bind("load", function() {
 			jQuery("div#slider1").codaSlider()
 			// jQuery("div#slider2").codaSlider()
@@ -328,9 +275,9 @@
 					feature.attributes.feature_id == feature_id)
 				{
 					if (typeof(selectedFeature) != 'undefined' && selectedFeature !='' ) {
-						selectCtrl.unselect(selectedFeature);
+						selectControl.unselect(selectedFeature);
 					}
-					selectCtrl.select(feature);
+					selectControl.select(feature);
 				}
 			}
 		}
